@@ -1,0 +1,699 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Grofit Tzameret Apartments</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--fg:#1c2230;--mut:#6b7280;--line:#e3e6eb;--acc:#2f6fdf;--acc2:#e8f0ff;--ok:#1e8e5a;--no:#b45309}
+@media (prefers-color-scheme:dark){:root{--bg:#12151b;--card:#1b2029;--fg:#e6e9ef;--mut:#9aa3b2;--line:#2a313d;--acc:#6ea0ff;--acc2:#1f2b44;--ok:#4ade80;--no:#fbbf24}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
+header{padding:20px 16px 8px;max-width:1400px;margin:auto}
+h1{margin:0 0 4px;font-size:22px}
+.sub{color:var(--mut)}
+main{max-width:1400px;margin:auto;padding:0 16px 40px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.card b{display:block;font-size:20px}
+.card span{color:var(--mut);font-size:12px}
+.filters{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px 14px;position:sticky;top:0;z-index:3}
+.f label{display:block;font-size:12px;color:var(--mut);margin-bottom:3px}
+.f input,.f select{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg);font:inherit}
+.row2{display:flex;gap:6px}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:14px;padding:3px 10px;cursor:pointer;font:inherit;font-size:13px}
+.chip.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.actions{display:flex;align-items:end;gap:8px;flex-wrap:wrap}
+button.reset{padding:6px 12px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--fg);cursor:pointer}
+h2{font-size:16px;margin:22px 0 8px}
+.tbl{overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;min-width:900px}
+th,td{padding:7px 9px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{position:sticky;top:0;background:var(--card);font-size:12px;color:var(--mut);cursor:pointer;user-select:none}
+th.sorted{color:var(--acc)}
+tbody tr:hover{filter:brightness(0.95)}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+.yes{color:var(--ok);font-weight:600}.no{color:var(--no)}
+a{color:var(--acc)}
+.count{color:var(--mut);margin:8px 0}
+.bar{height:6px;background:var(--acc2);border-radius:3px;overflow:hidden;min-width:60px}
+.bar i{display:block;height:100%;background:var(--acc)}
+
+.b1{--bc:#2f6fdf;--bs:#e6efff}.b2{--bc:#d9622b;--bs:#fdece3}.b3{--bc:#1e9e6a;--bs:#e2f6ec}
+@media (prefers-color-scheme:dark){.b1{--bc:#6ea0ff;--bs:#1c2a45}.b2{--bc:#ff9a66;--bs:#3a2418}.b3{--bc:#4ade9a;--bs:#15342a}}
+tr.b1,tr.b2,tr.b3{background:var(--bs)}
+tr.b1 td:first-child,tr.b2 td:first-child,tr.b3 td:first-child{border-left:4px solid var(--bc)}
+.bt{display:inline-block;padding:1px 8px;border-radius:10px;background:var(--bc);color:#fff;font-weight:600;font-size:12px}
+@media (prefers-color-scheme:dark){.bt{color:#111}}
+.chip.b1,.chip.b2,.chip.b3{border-color:var(--bc);color:var(--bc)}
+.chip.on.b1,.chip.on.b2,.chip.on.b3{background:var(--bc);color:#fff}
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+details>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px}
+details>summary::-webkit-details-marker{display:none}
+details>summary::before{content:"▸";color:var(--mut);transition:transform .15s;margin-top:14px}
+details[open]>summary::before{transform:rotate(90deg)}
+details>summary h2{display:inline}
+
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:14px 0 0}
+.tab{border:0;background:none;color:var(--mut);font:inherit;font-weight:600;padding:9px 14px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab.on{color:var(--fg);border-bottom-color:var(--acc)}
+.hide{display:none}
+.viz{--r3:#eda100;--r4:#e87ba4;--r5:#4a3aa7}
+@media (prefers-color-scheme:dark){.viz{--r3:#c98500;--r4:#d55181;--r5:#9085e9}}
+.pieBar{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin:14px 0}
+.pieGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.pieCard{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;position:relative}
+.pieCard h3{margin:0 0 2px;font-size:15px;display:flex;gap:8px;align-items:center}
+.pieCard .sub{font-size:12px;margin-bottom:6px}
+.pieCard svg{display:block;width:100%;max-width:300px;margin:auto}
+.pieCard.big svg{max-width:360px}
+.pieCard path{stroke:var(--card);stroke-width:2;cursor:pointer;transition:opacity .12s}
+.pieCard path.dim{opacity:.35}
+.pieCard .ctr{fill:var(--fg);font-weight:700;font-size:26px}
+.pieCard .ctr2{fill:var(--mut);font-size:12px}
+.pieCard .lbl{fill:var(--fg);font-size:12px;font-weight:600}
+.leg{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;margin:8px 0 4px;font-size:13px}
+.leg i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.tip{position:absolute;pointer-events:none;background:var(--fg);color:var(--bg);padding:6px 9px;border-radius:6px;font-size:12px;white-space:nowrap;display:none;z-index:5}
+.pieCard table{min-width:0;margin-top:8px;font-size:13px}
+.pieCard td,.pieCard th{padding:5px 6px;position:static}
+a.v3{font-weight:600;white-space:nowrap}
+select.fp{padding:2px 4px;font-size:12px;border:1px solid var(--line);border-radius:5px;background:var(--bg);color:var(--acc)}
+.sunHead{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 14px;margin:12px 0 8px;color:var(--mut);font-size:13px}
+#sunFrame{width:100%;height:max(560px,calc(100vh - 230px));border:1px solid var(--line);border-radius:10px;background:var(--card)}
+.calc{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin:14px 0 0}
+.calcHead{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;margin-bottom:8px}
+.calcHead span{color:var(--mut);font-size:12px}
+.calcGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px 14px}
+.calcGrid input[type=range]{width:100%;padding:0}
+.calcNote{margin-top:8px;font-size:13px}
+.mut{color:var(--mut)}
+td.mon{font-weight:600}
+td.over{color:var(--no)}
+td.warn{color:var(--no)}
+.turn{border-color:#c58b2b66}
+.qStats{display:flex;flex-wrap:wrap;gap:4px 18px;margin-top:10px;font-size:13px}
+.qBest{margin-top:8px;padding:8px 10px;border-radius:8px;background:var(--acc2);font-size:14px}
+.qBest .lbl{font-weight:700;margin-right:6px}
+.warnTxt{color:var(--no);font-weight:600}
+.qBtns button,.shortBar button,.shortList button{font:inherit;font-size:12px;padding:4px 9px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg);cursor:pointer}
+button.danger{color:var(--no)}
+.starBtn,.takeBtn{font:inherit;font-size:12px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--fg);cursor:pointer;padding:2px 9px;white-space:nowrap}
+.starBtn{font-size:16px;line-height:1;padding:2px 7px;color:#c58b2b}
+.starBtn.on{background:#c58b2b;border-color:#c58b2b;color:#fff}
+.takeBtn{color:var(--ok)}
+.takeBtn.on{background:var(--no);border-color:var(--no);color:#fff}
+tr.isTaken td{opacity:.45}
+tr.isTaken td:nth-child(n+3){text-decoration:line-through}
+tr.isTaken td:first-child,tr.isTaken td:nth-child(2){opacity:1}
+.shortBar{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px;margin:4px 0 8px;font-size:13px}
+.shortList{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.shortList li{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--bc);border-radius:8px;padding:6px 10px;font-size:13px}
+.shortList li.best{outline:2px solid #c58b2b;background:#c58b2b14}
+.shortList li.isTaken .what{text-decoration:line-through;opacity:.5}
+.shortList .rk{font-weight:700;min-width:22px}
+.shortList .what{flex:1;min-width:220px}
+.shortList .tag{font-weight:700;color:#c58b2b}
+.shortList li.isTaken .tag{color:var(--no)}
+.shortList .ops{display:flex;gap:4px}
+.shortList button:disabled{opacity:.35;cursor:default}
+.restoreBtn{font:inherit;font-size:12px;padding:3px 10px;border:1px solid var(--ok);border-radius:12px;background:var(--bg);color:var(--ok);cursor:pointer;white-space:nowrap}
+#takenT{min-width:700px}
+#takenT th:last-child,#takenT td:last-child{position:sticky;right:0;text-align:right;background:var(--card);box-shadow:-8px 0 8px -8px rgba(0,0,0,.25)}
+#takenT tr.b1 td:last-child,#takenT tr.b2 td:last-child,#takenT tr.b3 td:last-child{background:var(--card)}
+.thFilter{margin-left:6px;font:inherit;font-size:11px;padding:1px 6px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--mut);cursor:pointer;vertical-align:1px}
+.thFilter.on{background:var(--acc);border-color:var(--acc);color:#fff}
+[hidden]{display:none !important}
+.aptPop{position:fixed;z-index:50;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.18);display:flex;flex-direction:column;overflow:hidden;font-size:13px}
+.aptPop button{font:inherit;font-size:12px;padding:3px 9px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg);cursor:pointer}
+.apHead{display:flex;justify-content:space-between;align-items:center;padding:10px 12px 6px}
+.apX{border:0 !important;background:none !important;font-size:14px !important}
+.apQuick{display:flex;gap:6px;padding:0 12px 6px}
+.apQuick input{flex:1;min-width:0;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg);font:inherit}
+.apAll{display:flex;gap:6px;align-items:center;padding:0 12px 8px;border-bottom:1px solid var(--line)}
+.apBody{overflow:auto;padding:8px 12px;display:flex;flex-direction:column;gap:10px}
+.apGH{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.apGH span{display:flex;gap:4px}
+.apGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:4px}
+.apGrid label{display:flex;align-items:center;gap:3px;padding:3px 4px;border:1px solid var(--line);border-left:3px solid var(--bc);border-radius:5px;cursor:pointer;font-variant-numeric:tabular-nums;user-select:none}
+.apGrid label:has(input:checked){background:var(--acc2);border-color:var(--acc)}
+.apGrid label.tk{opacity:.45}
+.apGrid input{margin:0}
+.apFoot{padding:8px 12px 10px;border-top:1px solid var(--line);font-size:11px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:space-between}
+.apBtns{display:flex;gap:6px}
+.aptPop .apApply{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+.countBar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 12px;margin:8px 0}
+.countBar .count{margin:0}
+.bulkFree:disabled{opacity:.45;cursor:default}
+.bulkFree{font:inherit;font-size:12px;padding:4px 11px;border:1px solid var(--ok);border-radius:12px;background:var(--bg);color:var(--ok);cursor:pointer;font-weight:600}
+.locBtn{padding:0;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:zoom-in;display:block;line-height:0}
+.locBtn img{display:block;height:38px;width:auto;max-width:68px}
+.lb{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:16px}
+.lbCard{background:var(--card);border-radius:12px;max-width:min(680px,100%);width:100%;padding:12px 14px;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+.lbHead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+.lbHead button{border:0;background:none;color:var(--fg);font-size:18px;cursor:pointer}
+#lbImg{display:block;width:100%;height:auto;max-height:65vh;object-fit:contain;background:#fff;border-radius:8px}
+.lbFoot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 14px;margin-top:8px;font-size:13px}
+.lbKey{display:flex;align-items:center;gap:6px;color:var(--mut)}
+.lbKey i{display:inline-block;width:14px;height:10px;border-radius:2px}
+.kApt{background:#e5393538;border:2px solid #e53935}.kCore{background:#d4d4d8;margin-left:8px}
+.tpGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:5px}
+.tpGrid label{display:flex;align-items:center;gap:6px;padding:4px 6px;border:1px solid var(--line);border-left:3px solid var(--bc);border-radius:6px;cursor:pointer;user-select:none}
+.tpGrid label:has(input:checked){background:var(--acc2);border-color:var(--acc)}
+.tpGrid img{height:26px;width:auto;max-width:44px;background:#fff;border-radius:3px}
+.tpGrid .noimg{display:inline-block;width:30px;text-align:center;color:var(--mut)}
+.tpGrid .mut{margin-left:auto;font-size:11px}
+td.up div{white-space:nowrap;line-height:1.35}
+td.up .mut{font-size:11px}
+@media (max-width:760px),(max-height:700px){.filters{position:static}}   /* pinned filters would cover the whole screen on phones */
+</style>
+</head>
+<body>
+<header>
+  <h1>Grofit Tzameret, Petah Tikva: apartments</h1>
+  <div class="sub">205 units in 3 buildings, saved from the developer’s price list (<a href="https://mishtaken.grofit.co.il/" target="_blank" rel="noopener">mishtaken.grofit.co.il</a>, 30 Sep 2026); everything here runs from local files. Prices are published only for “Mechir Matara” (target-price) units. Other units show no price.</div>
+  <div class="legend"><span class="bt b1">1 (M1) · 30 units</span><span class="bt b2">2 (M2) · 25 units</span><span class="bt b3">3 (T1) tower · 150 units</span></div>
+</header>
+<main>
+  <div class="tabs"><button class="tab on" data-v="viewTable">Table</button><button class="tab" data-v="viewPie">Room mix (pie charts)</button><button class="tab" data-v="viewSun">☀️ Sun &amp; shadows (3D)</button></div>
+  <section id="viewSun" class="hide">
+    <div class="sunHead"><span>All three buildings with the sun for any date and time, plus a sun-hours heatmap per facade.</span><a href="sun.html" target="_blank">Open full screen ↗</a></div>
+    <iframe id="sunFrame" title="Sun and shadows 3D" loading="lazy"></iframe>
+  </section>
+  <section id="viewPie" class="viz hide">
+    <div class="pieBar">
+      <div class="f"><label>Building</label><div class="chips" id="pBld"></div></div>
+      <div class="f"><label>Units</label><select id="pScope"><option value="all">All units</option><option value="priced">Priced units only</option></select></div>
+    </div>
+    <div class="pieGrid" id="pieGrid"></div>
+  </section>
+  <section id="viewTable">
+  <div class="calc turn" id="turn">
+    <div class="calcHead"><b>🎟 My turn</b><span>Mark apartments as <i>Taken</i> as the people ahead of you choose, and ★ the ones you'd want. Saved in this browser only.</span></div>
+    <div class="calcGrid">
+      <div class="f"><label for="qNum">Our number in the queue</label><input type="number" id="qNum" min="1" step="1" value="117"></div>
+      <div class="f"><label for="qShow">Show in the table</label><select id="qShow"><option value="">All apartments</option><option value="free" selected>Hide taken (available only)</option><option value="taken">Taken only</option></select></div>
+      <div class="f"><label for="qStar">Shortlist</label><select id="qStar"><option value="">All</option><option value="1">★ My shortlist only</option></select></div>
+      <div class="f qBtns"><label>Backup</label><div><button id="qExport" type="button">Export</button> <button id="qImportBtn" type="button">Import</button><input type="file" id="qImport" accept="application/json" hidden> <button id="qClear" type="button" class="danger">Clear taken</button></div></div>
+    </div>
+    <div class="qStats" id="qStats"></div>
+    <div class="qBest" id="qBest"></div>
+  </div>
+  <div class="calc" id="calc">
+    <div class="calcHead"><b>🏦 Mortgage calculator</b><span>Fills the <i>Monthly payment</i> and <i>Mortgage</i> columns for every priced apartment.</span></div>
+    <div class="calcGrid">
+      <div class="f"><label for="mEq">Your own money (₪)</label><input type="number" id="mEq" min="0" step="10000" value="600000"></div>
+      <div class="f"><label for="mYears">Years to pay: <b id="mYearsVal">25</b></label><input type="range" id="mYears" min="4" max="30" step="1" value="25"></div>
+      <div class="f"><label for="mRate">Interest rate (% a year)</label><input type="number" id="mRate" min="0" max="15" step="0.05" value="4.5"></div>
+      <div class="f"><label for="mMax">Max monthly payment (₪, optional)</label><input type="number" id="mMax" min="0" step="250" placeholder="no limit"></div>
+    </div>
+    <div class="calcNote" id="calcNote"></div>
+  </div>
+  <div class="cards" id="cards"></div>
+
+  <div class="filters">
+    <div class="f"><label>Building</label><div class="chips" id="fBld"></div></div>
+    <div class="f"><label>Rooms</label><div class="chips" id="fRooms"></div></div>
+    <div class="f"><label>Apartment type</label><select id="fType"><option value="">All types</option></select></div>
+    <div class="f"><label>Floor (min – max)</label><div class="row2"><input type="number" id="fFloorMin" placeholder="min"><input type="number" id="fFloorMax" placeholder="max"></div></div>
+    <div class="f"><label>Price ₪ (min – max)</label><div class="row2"><input type="number" id="fPriceMin" step="50000" placeholder="min"><input type="number" id="fPriceMax" step="50000" placeholder="max"></div></div>
+    <div class="f"><label>Area m² (min – max)</label><div class="row2"><input type="number" id="fAreaMin" placeholder="min"><input type="number" id="fAreaMax" placeholder="max"></div></div>
+    <div class="f"><label>Balcony/garden m² (min)</label><input type="number" id="fOutMin" placeholder="any"></div>
+    <div class="f"><label>Target price</label><select id="fTarget"><option value="">All</option><option value="1" selected>Yes (priced)</option><option value="0">No</option></select></div>
+    <div class="f"><label>Special units</label><select id="fSpecial"><option value="">All</option><option value="garden">Garden / large terrace (≥50 m²)</option><option value="pn">Penthouses only</option><option value="regular">Regular floors only</option></select></div>
+    <div class="actions"><button class="reset" id="reset">Reset filters</button></div>
+  </div>
+
+  <details id="sumD" open>
+  <summary><h2>Apartment types summary</h2></summary>
+  <div class="tbl"><table id="sumT"><thead><tr>
+    <th>Building</th><th>Type</th><th>Location</th><th>Rooms</th><th>Units</th><th>Priced</th><th>Floors</th><th>Area m²</th><th>Balcony m²</th><th>Price from</th><th>Price to</th><th>Avg ₪/m²</th><th>Apt plan</th><th>Floor plan</th><th>3D</th>
+  </tr></thead><tbody></tbody></table></div>
+  </details>
+
+  <details id="shortD" open>
+  <summary><h2>★ My shortlist (ranked)</h2></summary>
+  <div class="shortBar"><span class="mut" id="shortHint"></span><span><button id="shortAdd" type="button">★ Add all shown</button> <button id="shortClear" type="button" class="danger">Clear shortlist</button></span></div>
+  <ol class="shortList" id="shortList"></ol>
+  </details>
+
+  <details id="aptD" open>
+  <summary><h2 id="aptTitle">Apartments</h2></summary>
+  <div class="countBar"><div class="count" id="count"></div><button type="button" id="bulkFree" class="bulkFree"></button></div>
+  <div class="tbl"><table id="mainT"><thead><tr></tr></thead><tbody></tbody></table></div>
+  </details>
+
+  <details id="takenD" open>
+  <summary><h2 id="takenTitle">✕ Removed from the pool</h2></summary>
+  <div class="shortBar"><span class="mut">Apartments you marked as taken, most recent first. Click <b>Restore</b> if one is actually still available.</span></div>
+  <div class="tbl"><table id="takenT"><thead><tr><th>#</th><th>Marked</th><th>Building</th><th>Apt #</th><th>Floor</th><th>Type</th><th>Rooms</th><th>Area m²</th><th>Price</th><th>Shortlist</th><th>Restore</th></tr></thead><tbody></tbody></table></div>
+  </details>
+  </section>
+<div class="lb" id="lb" hidden role="dialog" aria-modal="true" aria-label="Apartment location">
+  <div class="lbCard"><div class="lbHead"><b id="lbTitle"></b><button type="button" id="lbX" aria-label="Close">✕</button></div>
+  <img id="lbImg" alt=""><div class="lbFoot"><span class="lbKey"><i class="kApt"></i>this apartment <i class="kCore"></i>stairs &amp; elevators</span><a id="lbPdf" target="_blank">Open the apartment plan (PDF)</a></div></div>
+</div>
+</main>
+<script>
+const DATA = [{"apt": 1, "bld": "1 (M1)", "floor": 0, "type": "BG", "rooms": 5, "area": 131.8, "outdoor": 130.21, "target": false, "storage": 5.5, "parking": 1, "storageNo": "152", "price": null, "plan": null, "floorPlan": "pdfs/floors/M1/0.pdf"}, {"apt": 2, "bld": "1 (M1)", "floor": 0, "type": "CG", "rooms": 4, "area": 107.9, "outdoor": 73.85, "target": true, "storage": 5.92, "parking": 1, "storageNo": "15", "price": 2091168, "plan": "pdfs/apartments/M1/CG.pdf", "floorPlan": "pdfs/floors/M1/0.pdf"}, {"apt": 3, "bld": "1 (M1)", "floor": 1, "type": "B", "rooms": 5, "area": 131.8, "outdoor": 19.34, "target": true, "storage": 4.81, "parking": 1, "storageNo": "145", "price": 2311470, "plan": "pdfs/apartments/M1/B-3.pdf", "floorPlan": "pdfs/floors/M1/1.pdf"}, {"apt": 4, "bld": "1 (M1)", "floor": 1, "type": "C", "rooms": 4, "area": 107.9, "outdoor": 13.07, "target": true, "storage": 7.11, "parking": 1, "storageNo": "144", "price": 1868357, "plan": "pdfs/apartments/M1/C-4.pdf", "floorPlan": "pdfs/floors/M1/1.pdf"}, {"apt": 5, "bld": "1 (M1)", "floor": 2, "type": "B", "rooms": 5, "area": 131.6, "outdoor": 19.34, "target": true, "storage": 5.11, "parking": 1, "storageNo": "17", "price": 2310540, "plan": "pdfs/apartments/M1/B.pdf", "floorPlan": "pdfs/floors/M1/2.pdf"}, {"apt": 6, "bld": "1 (M1)", "floor": 2, "type": "C", "rooms": 4, "area": 107.7, "outdoor": 13.07, "target": true, "storage": 6.39, "parking": 1, "storageNo": "66", "price": 1859287, "plan": "pdfs/apartments/M1/C.pdf", "floorPlan": "pdfs/floors/M1/2.pdf"}, {"apt": 7, "bld": "1 (M1)", "floor": 2, "type": "D", "rooms": 4, "area": 104.06, "outdoor": 14.58, "target": true, "storage": 6.33, "parking": 1, "storageNo": "67", "price": 1799606, "plan": "pdfs/apartments/M1/D.pdf", "floorPlan": "pdfs/floors/M1/2.pdf"}, {"apt": 8, "bld": "1 (M1)", "floor": 2, "type": "A", "rooms": 4, "area": 104.27, "outdoor": 14.56, "target": true, "storage": 4.2, "parking": 1, "storageNo": "71", "price": 1787563, "plan": "pdfs/apartments/M1/A.pdf", "floorPlan": "pdfs/floors/M1/2.pdf"}, {"apt": 9, "bld": "1 (M1)", "floor": 3, "type": "B", "rooms": 5, "area": 131.6, "outdoor": 19.34, "target": true, "storage": 4.47, "parking": 1, "storageNo": "70", "price": 2305782, "plan": "pdfs/apartments/M1/B.pdf", "floorPlan": "pdfs/floors/M1/3.pdf"}, {"apt": 10, "bld": "1 (M1)", "floor": 3, "type": "C", "rooms": 4, "area": 107.7, "outdoor": 13.07, "target": true, "storage": 5.04, "parking": 1, "storageNo": "143", "price": 1849250, "plan": "pdfs/apartments/M1/C.pdf", "floorPlan": "pdfs/floors/M1/3.pdf"}, {"apt": 11, "bld": "1 (M1)", "floor": 3, "type": "D", "rooms": 4, "area": 104.06, "outdoor": 14.58, "target": true, "storage": 5.03, "parking": 1, "storageNo": "9", "price": 1789942, "plan": "pdfs/apartments/M1/D.pdf", "floorPlan": "pdfs/floors/M1/3.pdf"}, {"apt": 12, "bld": "1 (M1)", "floor": 3, "type": "A", "rooms": 4, "area": 104.27, "outdoor": 14.56, "target": true, "storage": 4.95, "parking": 1, "storageNo": "72", "price": 1793138, "plan": "pdfs/apartments/M1/A.pdf", "floorPlan": "pdfs/floors/M1/3.pdf"}, {"apt": 13, "bld": "1 (M1)", "floor": 4, "type": "B", "rooms": 5, "area": 131.6, "outdoor": 19.34, "target": true, "storage": 5.14, "parking": 1, "storageNo": "12", "price": 2310764, "plan": "pdfs/apartments/M1/B.pdf", "floorPlan": "pdfs/floors/M1/4.pdf"}, {"apt": 14, "bld": "1 (M1)", "floor": 4, "type": "C", "rooms": 4, "area": 107.7, "outdoor": 13.07, "target": true, "storage": 8.65, "parking": 1, "storageNo": "64", "price": 1876089, "plan": "pdfs/apartments/M1/C.pdf", "floorPlan": "pdfs/floors/M1/4.pdf"}, {"apt": 15, "bld": "1 (M1)", "floor": 4, "type": "D", "rooms": 4, "area": 104.06, "outdoor": 14.58, "target": true, "storage": 5.04, "parking": 1, "storageNo": "61", "price": 1790016, "plan": "pdfs/apartments/M1/D.pdf", "floorPlan": "pdfs/floors/M1/4.pdf"}, {"apt": 16, "bld": "1 (M1)", "floor": 4, "type": "A", "rooms": 4, "area": 104.27, "outdoor": 14.56, "target": true, "storage": 7.49, "parking": 1, "storageNo": "141", "price": 1812022, "plan": "pdfs/apartments/M1/A.pdf", "floorPlan": "pdfs/floors/M1/4.pdf"}, {"apt": 17, "bld": "1 (M1)", "floor": 5, "type": "B", "rooms": 5, "area": 131.6, "outdoor": 19.34, "target": false, "storage": 8.66, "parking": 1, "storageNo": "142", "price": null, "plan": null, "floorPlan": "pdfs/floors/M1/5.pdf"}, {"apt": 18, "bld": "1 (M1)", "floor": 5, "type": "C", "rooms": 4, "area": 107.7, "outdoor": 13.07, "target": true, "storage": 6.58, "parking": 1, "storageNo": "69", "price": 1860699, "plan": "pdfs/apartments/M1/C.pdf", "floorPlan": "pdfs/floors/M1/5.pdf"}, {"apt": 19, "bld": "1 (M1)", "floor": 5, "type": "D", "rooms": 4, "area": 104.06, "outdoor": 14.58, "target": true, "storage": 6.82, "parking": 1, "storageNo": "68", "price": 1803249, "plan": "pdfs/apartments/M1/D.pdf", "floorPlan": "pdfs/floors/M1/5.pdf"}, {"apt": 20, "bld": "1 (M1)", "floor": 5, "type": "A", "rooms": 4, "area": 104.27, "outdoor": 14.56, "target": true, "storage": 7.37, "parking": 1, "storageNo": "65", "price": 1811130, "plan": "pdfs/apartments/M1/A.pdf", "floorPlan": "pdfs/floors/M1/5.pdf"}, {"apt": 21, "bld": "1 (M1)", "floor": 6, "type": "B", "rooms": 5, "area": 131.6, "outdoor": 19.34, "target": false, "storage": 7.5, "parking": 1, "storageNo": "60", "price": null, "plan": null, "floorPlan": "pdfs/floors/M1/6.pdf"}, {"apt": 22, "bld": "1 (M1)", "floor": 6, "type": "C", "rooms": 4, "area": 107.7, "outdoor": 13.07, "target": true, "storage": 11.09, "parking": 1, "storageNo": "62", "price": 1894229, "plan": "pdfs/apartments/M1/C.pdf", "floorPlan": "pdfs/floors/M1/6.pdf"}, {"apt": 23, "bld": "1 (M1)", "floor": 6, "type": "D", "rooms": 4, "area": 104.06, "outdoor": 14.58, "target": true, "storage": 10.08, "parking": 1, "storageNo": "63", "price": 1827486, "plan": "pdfs/apartments/M1/D.pdf", "floorPlan": "pdfs/floors/M1/6.pdf"}, {"apt": 24, "bld": "1 (M1)", "floor": 6, "type": "A", "rooms": 4, "area": 104.27, "outdoor": 14.56, "target": true, "storage": 10.57, "parking": 1, "storageNo": "10", "price": 1834920, "plan": "pdfs/apartments/M1/A.pdf", "floorPlan": "pdfs/floors/M1/6.pdf"}, {"apt": 25, "bld": "1 (M1)", "floor": 7, "type": "B", "rooms": 5, "area": 131.6, "outdoor": 19.34, "target": false, "storage": 6.37, "parking": 1, "storageNo": "6", "price": null, "plan": null, "floorPlan": "pdfs/floors/M1/7.pdf"}, {"apt": 26, "bld": "1 (M1)", "floor": 7, "type": "C", "rooms": 4, "area": 107.7, "outdoor": 13.07, "target": true, "storage": 10.04, "parking": 1, "storageNo": "11", "price": 1886422, "plan": "pdfs/apartments/M1/C-26.pdf", "floorPlan": "pdfs/floors/M1/7.pdf"}, {"apt": 27, "bld": "1 (M1)", "floor": 7, "type": "D", "rooms": 4, "area": 104.06, "outdoor": 14.58, "target": true, "storage": 6.21, "parking": 1, "storageNo": "13", "price": 1798714, "plan": "pdfs/apartments/M1/D-27.pdf", "floorPlan": "pdfs/floors/M1/7.pdf"}, {"apt": 28, "bld": "1 (M1)", "floor": 7, "type": "A", "rooms": 4, "area": 104.27, "outdoor": 14.56, "target": true, "storage": 8.91, "parking": 1, "storageNo": "14", "price": 1822579, "plan": "pdfs/apartments/M1/A-28.pdf", "floorPlan": "pdfs/floors/M1/7.pdf"}, {"apt": 29, "bld": "1 (M1)", "floor": 8, "type": "PN-A", "rooms": 5, "area": 156.48, "outdoor": 95.82, "target": false, "storage": 5.3, "parking": 1, "storageNo": "77", "price": null, "plan": null, "floorPlan": "pdfs/floors/M1/8.pdf"}, {"apt": 30, "bld": "1 (M1)", "floor": 8, "type": "PN-B", "rooms": 5, "area": 147.38, "outdoor": 89.68, "target": false, "storage": 8.01, "parking": 1, "storageNo": "8", "price": null, "plan": null, "floorPlan": "pdfs/floors/M1/8.pdf"}, {"apt": 1, "bld": "2 (M2)", "floor": 1, "type": "D1", "rooms": 3, "area": 76.8, "outdoor": 70.06, "target": true, "storage": 5.85, "parking": 1, "storageNo": "136", "price": 1505573, "plan": "pdfs/apartments/M2/D1.pdf", "floorPlan": "pdfs/floors/M2/1.pdf"}, {"apt": 2, "bld": "2 (M2)", "floor": 1, "type": "A1", "rooms": 5, "area": 130.92, "outdoor": 58.63, "target": false, "storage": 7.27, "parking": 1, "storageNo": "56", "price": null, "plan": null, "floorPlan": "pdfs/floors/M2/1.pdf"}, {"apt": 3, "bld": "2 (M2)", "floor": 1, "type": "B1", "rooms": 4, "area": 103.8, "outdoor": 122.62, "target": true, "storage": 7.12, "parking": 1, "storageNo": "132", "price": 2109661, "plan": "pdfs/apartments/M2/B1.pdf", "floorPlan": "pdfs/floors/M2/1.pdf"}, {"apt": 4, "bld": "2 (M2)", "floor": 2, "type": "D", "rooms": 3, "area": 76.8, "outdoor": 11.2, "target": true, "storage": 5.95, "parking": 1, "storageNo": "131", "price": 1271276, "plan": "pdfs/apartments/M2/D.pdf", "floorPlan": "pdfs/floors/M2/2.pdf"}, {"apt": 5, "bld": "2 (M2)", "floor": 2, "type": "A", "rooms": 5, "area": 130.92, "outdoor": 19.49, "target": true, "storage": 4.7, "parking": 1, "storageNo": "135", "price": 2297586, "plan": "pdfs/apartments/M2/A.pdf", "floorPlan": "pdfs/floors/M2/2.pdf"}, {"apt": 6, "bld": "2 (M2)", "floor": 2, "type": "B", "rooms": 4, "area": 103.8, "outdoor": 14.56, "target": true, "storage": 5.74, "parking": 1, "storageNo": "48", "price": 1790276, "plan": "pdfs/apartments/M2/B.pdf", "floorPlan": "pdfs/floors/M2/2.pdf"}, {"apt": 7, "bld": "2 (M2)", "floor": 2, "type": "C", "rooms": 4, "area": 104.3, "outdoor": 14.5, "target": true, "storage": 6.96, "parking": 1, "storageNo": "50", "price": 1808305, "plan": "pdfs/apartments/M2/C.pdf", "floorPlan": "pdfs/floors/M2/2.pdf"}, {"apt": 8, "bld": "2 (M2)", "floor": 3, "type": "D", "rooms": 3, "area": 76.8, "outdoor": 11.2, "target": true, "storage": 5.74, "parking": 1, "storageNo": "130", "price": 1269714, "plan": "pdfs/apartments/M2/D.pdf", "floorPlan": "pdfs/floors/M2/3.pdf"}, {"apt": 9, "bld": "2 (M2)", "floor": 3, "type": "A", "rooms": 5, "area": 130.92, "outdoor": 19.49, "target": true, "storage": 6.3, "parking": 1, "storageNo": "59", "price": 2309481, "plan": "pdfs/apartments/M2/A.pdf", "floorPlan": "pdfs/floors/M2/3.pdf"}, {"apt": 10, "bld": "2 (M2)", "floor": 3, "type": "B", "rooms": 4, "area": 103.8, "outdoor": 14.56, "target": true, "storage": 5.67, "parking": 1, "storageNo": "138", "price": 1789756, "plan": "pdfs/apartments/M2/B.pdf", "floorPlan": "pdfs/floors/M2/3.pdf"}, {"apt": 11, "bld": "2 (M2)", "floor": 3, "type": "C", "rooms": 4, "area": 104.3, "outdoor": 14.5, "target": true, "storage": 6.23, "parking": 1, "storageNo": "140", "price": 1802878, "plan": "pdfs/apartments/M2/C.pdf", "floorPlan": "pdfs/floors/M2/3.pdf"}, {"apt": 12, "bld": "2 (M2)", "floor": 4, "type": "D", "rooms": 3, "area": 76.8, "outdoor": 11.2, "target": true, "storage": 6.94, "parking": 1, "storageNo": "133", "price": 1278636, "plan": "pdfs/apartments/M2/D.pdf", "floorPlan": "pdfs/floors/M2/4.pdf"}, {"apt": 13, "bld": "2 (M2)", "floor": 4, "type": "A", "rooms": 5, "area": 130.92, "outdoor": 19.49, "target": true, "storage": 6.27, "parking": 1, "storageNo": "53", "price": 2309258, "plan": "pdfs/apartments/M2/A.pdf", "floorPlan": "pdfs/floors/M2/4.pdf"}, {"apt": 14, "bld": "2 (M2)", "floor": 4, "type": "B", "rooms": 4, "area": 103.8, "outdoor": 14.56, "target": true, "storage": 6.31, "parking": 1, "storageNo": "55", "price": 1794514, "plan": "pdfs/apartments/M2/B.pdf", "floorPlan": "pdfs/floors/M2/4.pdf"}, {"apt": 15, "bld": "2 (M2)", "floor": 4, "type": "C", "rooms": 4, "area": 104.3, "outdoor": 14.5, "target": true, "storage": 4.52, "parking": 1, "storageNo": "54", "price": 1790165, "plan": "pdfs/apartments/M2/C.pdf", "floorPlan": "pdfs/floors/M2/4.pdf"}, {"apt": 16, "bld": "2 (M2)", "floor": 5, "type": "D", "rooms": 3, "area": 76.8, "outdoor": 11.2, "target": true, "storage": 6.49, "parking": 1, "storageNo": "134", "price": 1275290, "plan": "pdfs/apartments/M2/D.pdf", "floorPlan": "pdfs/floors/M2/5.pdf"}, {"apt": 17, "bld": "2 (M2)", "floor": 5, "type": "A", "rooms": 5, "area": 130.92, "outdoor": 19.49, "target": true, "storage": 6.15, "parking": 1, "storageNo": "52", "price": 2308366, "plan": "pdfs/apartments/M2/A.pdf", "floorPlan": "pdfs/floors/M2/5.pdf"}, {"apt": 18, "bld": "2 (M2)", "floor": 5, "type": "B", "rooms": 4, "area": 103.8, "outdoor": 14.56, "target": true, "storage": 7.23, "parking": 1, "storageNo": "51", "price": 1801354, "plan": "pdfs/apartments/M2/B.pdf", "floorPlan": "pdfs/floors/M2/5.pdf"}, {"apt": 19, "bld": "2 (M2)", "floor": 5, "type": "C", "rooms": 4, "area": 104.3, "outdoor": 14.5, "target": true, "storage": 5.95, "parking": 1, "storageNo": "49", "price": 1800796, "plan": "pdfs/apartments/M2/C.pdf", "floorPlan": "pdfs/floors/M2/5.pdf"}, {"apt": 20, "bld": "2 (M2)", "floor": 6, "type": "D", "rooms": 3, "area": 76.8, "outdoor": 11.2, "target": true, "storage": 7.4, "parking": 1, "storageNo": "2", "price": 1282056, "plan": "pdfs/apartments/M2/D-20.pdf", "floorPlan": "pdfs/floors/M2/6.pdf"}, {"apt": 21, "bld": "2 (M2)", "floor": 6, "type": "A", "rooms": 5, "area": 130.92, "outdoor": 19.49, "target": false, "storage": 7.96, "parking": 1, "storageNo": "58", "price": null, "plan": null, "floorPlan": "pdfs/floors/M2/6.pdf"}, {"apt": 22, "bld": "2 (M2)", "floor": 6, "type": "B", "rooms": 4, "area": 103.8, "outdoor": 14.56, "target": true, "storage": 6.23, "parking": 1, "storageNo": "7", "price": 1793919, "plan": "pdfs/apartments/M2/B-22.pdf", "floorPlan": "pdfs/floors/M2/6.pdf"}, {"apt": 23, "bld": "2 (M2)", "floor": 6, "type": "C", "rooms": 4, "area": 104.3, "outdoor": 14.5, "target": true, "storage": 6.49, "parking": 1, "storageNo": "3", "price": 1804811, "plan": "pdfs/apartments/M2/C-23.pdf", "floorPlan": "pdfs/floors/M2/6.pdf"}, {"apt": 24, "bld": "2 (M2)", "floor": 7, "type": "PN-A", "rooms": 5, "area": 157.84, "outdoor": 88.31, "target": false, "storage": 14.29, "parking": 1, "storageNo": "5", "price": null, "plan": null, "floorPlan": "pdfs/floors/M2/7.pdf"}, {"apt": 25, "bld": "2 (M2)", "floor": 7, "type": "PN-B", "rooms": 5, "area": 145.82, "outdoor": 92.11, "target": false, "storage": 4.79, "parking": 1, "storageNo": "18", "price": null, "plan": null, "floorPlan": "pdfs/floors/M2/7.pdf"}, {"apt": 1, "bld": "3 (T1)", "floor": 1, "type": "C1", "rooms": 3, "area": 78.82, "outdoor": 122.32, "target": true, "storage": 6.39, "parking": 1, "storageNo": "16", "price": 1542954, "plan": "pdfs/apartments/T1/C1.pdf", "floorPlan": "pdfs/floors/T1/1.pdf"}, {"apt": 2, "bld": "3 (T1)", "floor": 1, "type": "A1", "rooms": 5, "area": 140.37, "outdoor": 99.81, "target": false, "storage": 5.95, "parking": 1, "storageNo": "112", "price": null, "plan": null, "floorPlan": "pdfs/floors/T1/1.pdf"}, {"apt": 3, "bld": "3 (T1)", "floor": 2, "type": "E2", "rooms": 4, "area": 107.77, "outdoor": 116.86, "target": true, "storage": 6.96, "parking": 1, "storageNo": "1", "price": 2052601, "plan": "pdfs/apartments/T1/E2.pdf", "floorPlan": "pdfs/floors/T1/2.pdf"}, {"apt": 4, "bld": "3 (T1)", "floor": 2, "type": "D2", "rooms": 3, "area": 79.85, "outdoor": 216.57, "target": true, "storage": 8.51, "parking": 1, "storageNo": "22", "price": 1576113, "plan": "pdfs/apartments/T1/D2.pdf", "floorPlan": "pdfs/floors/T1/2.pdf"}, {"apt": 5, "bld": "3 (T1)", "floor": 2, "type": "C", "rooms": 3, "area": 78.53, "outdoor": 8.1, "target": true, "storage": 6.8, "parking": 1, "storageNo": "26", "price": 1212841, "plan": "pdfs/apartments/T1/C-5.pdf", "floorPlan": "pdfs/floors/T1/2.pdf"}, {"apt": 6, "bld": "3 (T1)", "floor": 2, "type": "B", "rooms": 4, "area": 105.34, "outdoor": 18.92, "target": true, "storage": 6.54, "parking": 1, "storageNo": "21", "price": 1741699, "plan": "pdfs/apartments/T1/B-6.pdf", "floorPlan": "pdfs/floors/T1/2.pdf"}, {"apt": 7, "bld": "3 (T1)", "floor": 2, "type": "A", "rooms": 5, "area": 139.66, "outdoor": 22.16, "target": true, "storage": 5.31, "parking": 1, "storageNo": "198", "price": 2317331, "plan": "pdfs/apartments/T1/A-7.pdf", "floorPlan": "pdfs/floors/T1/2.pdf"}, {"apt": 8, "bld": "3 (T1)", "floor": 3, "type": "E", "rooms": 4, "area": 107.77, "outdoor": 11.91, "target": true, "storage": 6.16, "parking": 1, "storageNo": "20", "price": 1744789, "plan": "pdfs/apartments/T1/E.pdf", "floorPlan": "pdfs/floors/T1/3.pdf"}, {"apt": 9, "bld": "3 (T1)", "floor": 3, "type": "D", "rooms": 3, "area": 79.85, "outdoor": 8.29, "target": true, "storage": 5.96, "parking": 1, "storageNo": "19", "price": 1231222, "plan": "pdfs/apartments/T1/D.pdf", "floorPlan": "pdfs/floors/T1/3.pdf"}, {"apt": 10, "bld": "3 (T1)", "floor": 3, "type": "C", "rooms": 3, "area": 78.53, "outdoor": 8.1, "target": true, "storage": 5.63, "parking": 1, "storageNo": "30", "price": 1204577, "plan": "pdfs/apartments/T1/C.pdf", "floorPlan": "pdfs/floors/T1/3.pdf"}, {"apt": 11, "bld": "3 (T1)", "floor": 3, "type": "B", "rooms": 4, "area": 105.34, "outdoor": 18.92, "target": true, "storage": 6.83, "parking": 1, "storageNo": "4", "price": 1743748, "plan": "pdfs/apartments/T1/B.pdf", "floorPlan": "pdfs/floors/T1/3.pdf"}, {"apt": 12, "bld": "3 (T1)", "floor": 3, "type": "A", "rooms": 5, "area": 139.67, "outdoor": 22.16, "target": true, "storage": 5.27, "parking": 1, "storageNo": "201", "price": 2317199, "plan": "pdfs/apartments/T1/A.pdf", "floorPlan": "pdfs/floors/T1/3.pdf"}, {"apt": 13, "bld": "3 (T1)", "floor": 4, "type": "E", "rooms": 4, "area": 107.77, "outdoor": 11.91, "target": true, "storage": 4.7, "parking": 1, "storageNo": "190", "price": 1734478, "plan": "pdfs/apartments/T1/E.pdf", "floorPlan": "pdfs/floors/T1/4.pdf"}, {"apt": 14, "bld": "3 (T1)", "floor": 4, "type": "D", "rooms": 3, "area": 79.85, "outdoor": 8.29, "target": true, "storage": 7.2, "parking": 1, "storageNo": "29", "price": 1239979, "plan": "pdfs/apartments/T1/D.pdf", "floorPlan": "pdfs/floors/T1/4.pdf"}, {"apt": 15, "bld": "3 (T1)", "floor": 4, "type": "C", "rooms": 3, "area": 78.53, "outdoor": 8.1, "target": true, "storage": 4.2, "parking": 1, "storageNo": "36", "price": 1195582, "plan": "pdfs/apartments/T1/C.pdf", "floorPlan": "pdfs/floors/T1/4.pdf"}, {"apt": 16, "bld": "3 (T1)", "floor": 4, "type": "B", "rooms": 4, "area": 105.34, "outdoor": 18.92, "target": true, "storage": 5.02, "parking": 1, "storageNo": "186", "price": 1730964, "plan": "pdfs/apartments/T1/B.pdf", "floorPlan": "pdfs/floors/T1/4.pdf"}, {"apt": 17, "bld": "3 (T1)", "floor": 4, "type": "A", "rooms": 5, "area": 139.67, "outdoor": 22.16, "target": true, "storage": 8.51, "parking": 1, "storageNo": "83", "price": 2340082, "plan": "pdfs/apartments/T1/A.pdf", "floorPlan": "pdfs/floors/T1/4.pdf"}, {"apt": 18, "bld": "3 (T1)", "floor": 5, "type": "E", "rooms": 4, "area": 107.77, "outdoor": 11.91, "target": true, "storage": 5.91, "parking": 1, "storageNo": "185", "price": 1743024, "plan": "pdfs/apartments/T1/E.pdf", "floorPlan": "pdfs/floors/T1/5.pdf"}, {"apt": 19, "bld": "3 (T1)", "floor": 5, "type": "D", "rooms": 3, "area": 79.85, "outdoor": 8.29, "target": true, "storage": 4.51, "parking": 1, "storageNo": "35", "price": 1220981, "plan": "pdfs/apartments/T1/D.pdf", "floorPlan": "pdfs/floors/T1/5.pdf"}, {"apt": 20, "bld": "3 (T1)", "floor": 5, "type": "C", "rooms": 3, "area": 78.53, "outdoor": 8.1, "target": true, "storage": 4.62, "parking": 1, "storageNo": "34", "price": 1197955, "plan": "pdfs/apartments/T1/C.pdf", "floorPlan": "pdfs/floors/T1/5.pdf"}, {"apt": 21, "bld": "3 (T1)", "floor": 5, "type": "B", "rooms": 4, "area": 105.34, "outdoor": 18.92, "target": true, "storage": 6.78, "parking": 1, "storageNo": "184", "price": 1743394, "plan": "pdfs/apartments/T1/B.pdf", "floorPlan": "pdfs/floors/T1/5.pdf"}, {"apt": 22, "bld": "3 (T1)", "floor": 5, "type": "A", "rooms": 5, "area": 139.67, "outdoor": 22.16, "target": true, "storage": 6.54, "parking": 1, "storageNo": "111", "price": 2326168, "plan": "pdfs/apartments/T1/A.pdf", "floorPlan": "pdfs/floors/T1/5.pdf"}, {"apt": 23, "bld": "3 (T1)", "floor": 6, "type": "E", "rooms": 4, "area": 107.77, "outdoor": 11.91, "target": true, "storage": 4.57, "parking": 1, "storageNo": "117", "price": 1733559, "plan": "pdfs/apartments/T1/E.pdf", "floorPlan": "pdfs/floors/T1/6.pdf"}, {"apt": 24, "bld": "3 (T1)", "floor": 6, "type": "D", "rooms": 3, "area": 79.85, "outdoor": 8.29, "target": true, "storage": 5.57, "parking": 1, "storageNo": "24", "price": 1228467, "plan": "pdfs/apartments/T1/D.pdf", "floorPlan": "pdfs/floors/T1/6.pdf"}, {"apt": 25, "bld": "3 (T1)", "floor": 6, "type": "C", "rooms": 3, "area": 78.53, "outdoor": 8.1, "target": true, "storage": 5.43, "parking": 1, "storageNo": "23", "price": 1203165, "plan": "pdfs/apartments/T1/C.pdf", "floorPlan": "pdfs/floors/T1/6.pdf"}, {"apt": 26, "bld": "3 (T1)", "floor": 6, "type": "B", "rooms": 4, "area": 105.34, "outdoor": 18.92, "target": true, "storage": 4.56, "parking": 1, "storageNo": "116", "price": 1727715, "plan": "pdfs/apartments/T1/B.pdf", "floorPlan": "pdfs/floors/T1/6.pdf"}, {"apt": 27, "bld": "3 (T1)", "floor": 6, "type": "A", "rooms": 5, "area": 139.67, "outdoor": 22.16, "target": true, "storage": 5.11, "parking": 1, "storageNo": "204", "price": 2316068, "plan": "pdfs/apartments/T1/A.pdf", "floorPlan": "pdfs/floors/T1/6.pdf"}, {"apt": 28, "bld": "3 (T1)", "floor": 7, "type": "E", "rooms": 4, "area": 107.77, "outdoor": 11.91, "target": true, "storage": 4.56, "parking": 1, "storageNo": "115", "price": 1744191, "plan": "pdfs/apartments/T1/E.pdf", "floorPlan": "pdfs/floors/T1/7.pdf"}, {"apt": 29, "bld": "3 (T1)", "floor": 7, "type": "D", "rooms": 3, "area": 79.85, "outdoor": 8.29, "target": true, "storage": 7.29, "parking": 1, "storageNo": "172", "price": 1248723, "plan": "pdfs/apartments/T1/D.pdf", "floorPlan": "pdfs/floors/T1/7.pdf"}, {"apt": 30, "bld": "3 (T1)", "floor": 7, "type": "C", "rooms": 3, "area": 78.53, "outdoor": 8.1, "target": true, "storage": 5.17, "parking": 1, "storageNo": "25", "price": 1209230, "plan": "pdfs/apartments/T1/C.pdf", "floorPlan": "pdfs/floors/T1/7.pdf"}, {"apt": 31, "bld": "3 (T1)", "floor": 7, "type": "B", "rooms": 4, "area": 105.34, "outdoor": 18.92, "target": true, "storage": 4.38, "parking": 1, "storageNo": "121", "price": 1737109, "plan": "pdfs/apartments/T1/B.pdf", "floorPlan": "pdfs/floors/T1/7.pdf"}, {"apt": 32, "bld": "3 (T1)", "floor": 7, "type": "A", "rooms": 5, "area": 139.83, "outdoor": 22.16, "target": true, "storage": 6.22, "parking": 1, "storageNo": "197", "price": 2340132, "plan": "pdfs/apartments/T1/A.pdf", "floorPlan": "pdfs/floors/T1/7.pdf"}, {"apt": 33, "bld": "3 (T1)", "floor": 8, "type": "E", "rooms": 4, "area": 107.77, "outdoor": 11.91, "target": true, "storage": 7.15, "parking": 1, "storageNo": "137", "price": 1773379, "plan": "pdfs/apartments/T1/E.pdf", "floorPlan": "pdfs/floors/T1/8.pdf"}, {"apt": 34, "bld": "3 (T1)", "floor": 8, "type": "D", "rooms": 3, "area": 79.85, "outdoor": 8.29, "target": true, "storage": 5.51, "parking": 1, "storageNo": "32", "price": 1244128, "plan": "pdfs/apartments/T1/D.pdf", "floorPlan": "pdfs/floors/T1/8.pdf"}, {"apt": 35, "bld": "3 (T1)", "floor": 8, "type": "C", "rooms": 3, "area": 78.53, "outdoor": 8.1, "target": true, "storage": 5.46, "parking": 1, "storageNo": "31", "price": 1219202, "plan": "pdfs/apartments/T1/C.pdf", "floorPlan": "pdfs/floors/T1/8.pdf"}, {"apt": 36, "bld": "3 (T1)", "floor": 8, "type": "B", "rooms": 4, "area": 105.34, "outdoor": 18.92, "target": true, "storage": 8.2, "parking": 1, "storageNo": "139", "price": 1775038, "plan": "pdfs/apartments/T1/B.pdf", "floorPlan": "pdfs/floors/T1/8.pdf"}, {"apt": 37, "bld": "3 (T1)", "floor": 8, "type": "A", "rooms": 5, "area": 139.81, "outdoor": 22.16, "target": true, "storage": 5.74, "parking": 1, "storageNo": "199", "price": 2350226, "plan": "pdfs/apartments/T1/A.pdf", "floorPlan": "pdfs/floors/T1/8.pdf"}, {"apt": 38, "bld": "3 (T1)", "floor": 9, "type": "E", "rooms": 4, "area": 107.77, "outdoor": 11.91, "target": true, "storage": 6.31, "parking": 1, "storageNo": "191", "price": 1778152, "plan": "pdfs/apartments/T1/E.pdf", "floorPlan": "pdfs/floors/T1/9.pdf"}, {"apt": 39, "bld": "3 (T1)", "floor": 9, "type": "D", "rooms": 3, "area": 79.85, "outdoor": 8.29, "target": true, "storage": 5.52, "parking": 1, "storageNo": "41", "price": 1252242, "plan": "pdfs/apartments/T1/D.pdf", "floorPlan": "pdfs/floors/T1/9.pdf"}, {"apt": 40, "bld": "3 (T1)", "floor": 9, "type": "C", "rooms": 3, "area": 78.53, "outdoor": 8.1, "target": true, "storage": 6.81, "parking": 1, "storageNo": "33", "price": 1236799, "plan": "pdfs/apartments/T1/C.pdf", "floorPlan": "pdfs/floors/T1/9.pdf"}, {"apt": 41, "bld": "3 (T1)", "floor": 9, "type": "B", "rooms": 4, "area": 105.34, "outdoor": 18.92, "target": true, "storage": 5.05, "parking": 1, "storageNo": "173", "price": 1763247, "plan": "pdfs/apartments/T1/B.pdf", "floorPlan": "pdfs/floors/T1/9.pdf"}, {"apt": 42, "bld": "3 (T1)", "floor": 9, "type": "A", "rooms": 5, "area": 139.79, "outdoor": 22.16, "target": false, "storage": 5.75, "parking": 1, "storageNo": "200", "price": null, "plan": null, "floorPlan": "pdfs/floors/T1/9.pdf"}, {"apt": 43, "bld": "3 (T1)", "floor": 10, "type": "E", "rooms": 4, "area": 107.77, "outdoor": 11.91, "target": true, "storage": 4.68, "parking": 1, "storageNo": "174", "price": 1777165, "plan": "pdfs/apartments/T1/E.pdf", "floorPlan": "pdfs/floors/T1/10.pdf"}, {"apt": 44, "bld": "3 (T1)", "floor": 10, "type": "D", "rooms": 3, "area": 79.85, "outdoor": 8.29, "target": true, "storage": 4.53, "parking": 1, "storageNo": "39", "price": 1253145, "plan": "pdfs/apartments/T1/D.pdf", "floorPlan": "pdfs/floors/T1/10.pdf"}, {"apt": 45, "bld": "3 (T1)", "floor": 10, "type": "C", "rooms": 3, "area": 78.53, "outdoor": 8.1, "target": true, "storage": 4.8, "parking": 1, "storageNo": "40", "price": 1230267, "plan": "pdfs/apartments/T1/C.pdf", "floorPlan": "pdfs/floors/T1/10.pdf"}, {"apt": 46, "bld": "3 (T1)", "floor": 10, "type": "B", "rooms": 4, "area": 105.34, "outdoor": 18.92, "target": true, "storage": 5.99, "parking": 1, "storageNo": "175", "price": 1780716, "plan": "pdfs/apartments/T1/B.pdf", "floorPlan": "pdfs/floors/T1/10.pdf"}, {"apt": 47, "bld": "3 (T1)", "floor": 10, "type": "A", "rooms": 5, "area": 139.78, "outdoor": 22.16, "target": false, "storage": 6.45, "parking": 1, "storageNo": "124", "price": null, "plan": null, "floorPlan": "pdfs/floors/T1/10.pdf"}, {"apt": 48, "bld": "3 (T1)", "floor": 11, "type": "E", "rooms": 4, "area": 107.77, "outdoor": 11.91, "target": true, "storage": 5.35, "parking": 1, "storageNo": "98", "price": 1792728, "plan": "pdfs/apartments/T1/E.pdf", "floorPlan": "pdfs/floors/T1/11.pdf"}, {"apt": 49, "bld": "3 (T1)", "floor": 11, "type": "D", "rooms": 3, "area": 79.85, "outdoor": 8.29, "target": true, "storage": 4.55, "parking": 1, "storageNo": "37", "price": 1261296, "plan": "pdfs/apartments/T1/D.pdf", "floorPlan": "pdfs/floors/T1/11.pdf"}, {"apt": 50, "bld": "3 (T1)", "floor": 11, "type": "C", "rooms": 3, "area": 78.53, "outdoor": 8.1, "target": true, "storage": 4.55, "parking": 1, "storageNo": "38", "price": 1236343, "plan": "pdfs/apartments/T1/C.pdf", "floorPlan": "pdfs/floors/T1/11.pdf"}, {"apt": 51, "bld": "3 (T1)", "floor": 11, "type": "B", "rooms": 4, "area": 105.34, "outdoor": 18.92, "target": true, "storage": 4.94, "parking": 1, "storageNo": "99", "price": 1783830, "plan": "pdfs/apartments/T1/B.pdf", "floorPlan": "pdfs/floors/T1/11.pdf"}, {"apt": 52, "bld": "3 (T1)", "floor": 11, "type": "A", "rooms": 5, "area": 139.78, "outdoor": 22.16, "target": false, "storage": 11.64, "parking": 1, "storageNo": "127", "price": null, "plan": null, "floorPlan": "pdfs/floors/T1/11.pdf"}, {"apt": 53, "bld": "3 (T1)", "floor": 12, "type": "E", "rooms": 4, "area": 107.77, "outdoor": 11.91, "target": true, "storage": 5.43, "parking": 1, "storageNo": "57", "price": 1804043, "plan": "pdfs/apartments/T1/E.pdf", "floorPlan": "pdfs/floors/T1/12.pdf"}, {"apt": 54, "bld": "3 (T1)", "floor": 12, "type": "D", "rooms": 3, "area": 79.85, "outdoor": 8.29, "target": true, "storage": 6.15, "parking": 1, "storageNo": "46", "price": 1280960, "plan": "pdfs/apartments/T1/D.pdf", "floorPlan": "pdfs/floors/T1/12.pdf"}, {"apt": 55, "bld": "3 (T1)", "floor": 12, "type": "C", "rooms": 3, "area": 78.53, "outdoor": 8.1, "target": true, "storage": 4.46, "parking": 1, "storageNo": "45", "price": 1243566, "plan": "pdfs/apartments/T1/C.pdf", "floorPlan": "pdfs/floors/T1/12.pdf"}, {"apt": 56, "bld": "3 (T1)", "floor": 12, "type": "B", "rooms": 4, "area": 105.34, "outdoor": 18.92, "target": true, "storage": 5.96, "parking": 1, "storageNo": "78", "price": 1801948, "plan": "pdfs/apartments/T1/B.pdf", "floorPlan": "pdfs/floors/T1/12.pdf"}, {"apt": 57, "bld": "3 (T1)", "floor": 12, "type": "A", "rooms": 5, "area": 139.78, "outdoor": 22.16, "target": false, "storage": 5.74, "parking": 1, "storageNo": "125", "price": null, "plan": null, "floorPlan": "pdfs/floors/T1/12.pdf"}, {"apt": 58, "bld": "3 (T1)", "floor": 13, "type": "E", "rooms": 4, "area": 107.77, "outdoor": 11.91, "target": true, "storage": 5.57, "parking": 1, "storageNo": "100", "price": 1815803, "plan": "pdfs/apartments/T1/E.pdf", "floorPlan": "pdfs/floors/T1/13.pdf"}, {"apt": 59, "bld": "3 (T1)", "floor": 13, "type": "D", "rooms": 3, "area": 79.85, "outdoor": 8.29, "target": true, "storage": 5.34, "parking": 1, "storageNo": "42", "price": 1283095, "plan": "pdfs/apartments/T1/D.pdf", "floorPlan": "pdfs/floors/T1/13.pdf"}, {"apt": 60, "bld": "3 (T1)", "floor": 13, "type": "C", "rooms": 3, "area": 78.53, "outdoor": 8.1, "target": true, "storage": 5.36, "parking": 1, "storageNo": "169", "price": 1258032, "plan": "pdfs/apartments/T1/C.pdf", "floorPlan": "pdfs/floors/T1/13.pdf"}, {"apt": 61, "bld": "3 (T1)", "floor": 13, "type": "B", "rooms": 4, "area": 105.34, "outdoor": 18.92, "target": true, "storage": 6.69, "parking": 1, "storageNo": "101", "price": 1818018, "plan": "pdfs/apartments/T1/B.pdf", "floorPlan": "pdfs/floors/T1/13.pdf"}, {"apt": 62, "bld": "3 (T1)", "floor": 13, "type": "A", "rooms": 5, "area": 139.78, "outdoor": 22.16, "target": false, "storage": 5.75, "parking": 1, "storageNo": "126", "price": null, "plan": null, "floorPlan": "pdfs/floors/T1/13.pdf"}, {"apt": 63, "bld": "3 (T1)", "floor": 14, "type": "E", "rooms": 4, "area": 107.77, "outdoor": 11.91, "target": true, "storage": 6.99, "parking": 1, "storageNo": "176", "price": 1836995, "plan": "pdfs/apartments/T1/E.pdf", "floorPlan": "pdfs/floors/T1/14.pdf"}, {"apt": 64, "bld": "3 (T1)", "floor": 14, "type": "D", "rooms": 3, "area": 79.85, "outdoor": 8.29, "target": true, "storage": 4.69, "parking": 1, "storageNo": "167", "price": 1286347, "plan": "pdfs/apartments/T1/D.pdf", "floorPlan": "pdfs/floors/T1/14.pdf"}, {"apt": 65, "bld": "3 (T1)", "floor": 14, "type": "C", "rooms": 3, "area": 78.53, "outdoor": 8.1, "target": true, "storage": 4.62, "parking": 1, "storageNo": "166", "price": 1260494, "plan": "pdfs/apartments/T1/C.pdf", "floorPlan": "pdfs/floors/T1/14.pdf"}, {"apt": 66, "bld": "3 (T1)", "floor": 14, "type": "B", "rooms": 4, "area": 105.34, "outdoor": 18.92, "target": true, "storage": 7.2, "parking": 1, "storageNo": "179", "price": 1832523, "plan": "pdfs/apartments/T1/B.pdf", "floorPlan": "pdfs/floors/T1/14.pdf"}, {"apt": 67, "bld": "3 (T1)", "floor": 14, "type": "A", "rooms": 5, "area": 139.78, "outdoor": 22.16, "target": false, "storage": 12.61, "parking": 1, "storageNo": "109", "price": null, "plan": null, "floorPlan": "pdfs/floors/T1/14.pdf"}, {"apt": 68, "bld": "3 (T1)", "floor": 15, "type": "E", "rooms": 4, "area": 107.77, "outdoor": 11.91, "target": true, "storage": 5.94, "parking": 1, "storageNo": "153", "price": 1840020, "plan": "pdfs/apartments/T1/E.pdf", "floorPlan": "pdfs/floors/T1/15.pdf"}, {"apt": 69, "bld": "3 (T1)", "floor": 15, "type": "D", "rooms": 3, "area": 79.85, "outdoor": 8.29, "target": true, "storage": 4.63, "parking": 1, "storageNo": "165", "price": 1293915, "plan": "pdfs/apartments/T1/D.pdf", "floorPlan": "pdfs/floors/T1/15.pdf"}, {"apt": 70, "bld": "3 (T1)", "floor": 15, "type": "C", "rooms": 3, "area": 78.53, "outdoor": 8.1, "target": true, "storage": 5.07, "parking": 1, "storageNo": "164", "price": 1271704, "plan": "pdfs/apartments/T1/C.pdf", "floorPlan": "pdfs/floors/T1/15.pdf"}, {"apt": 71, "bld": "3 (T1)", "floor": 15, "type": "B", "rooms": 4, "area": 105.34, "outdoor": 18.92, "target": true, "storage": 6.17, "parking": 1, "storageNo": "147", "price": 1835674, "plan": "pdfs/apartments/T1/B.pdf", "floorPlan": "pdfs/floors/T1/15.pdf"}, {"apt": 72, "bld": "3 (T1)", "floor": 15, "type": "A", "rooms": 5, "area": 139.78, "outdoor": 22.16, "target": false, "storage": 12.61, "parking": 1, "storageNo": "195", "price": null, "plan": null, "floorPlan": "pdfs/floors/T1/15.pdf"}, {"apt": 73, "bld": "3 (T1)", "floor": 16, "type": "E", "rooms": 4, "area": 107.77, "outdoor": 11.91, "target": true, "storage": 9.04, "parking": 1, "storageNo": "146", "price": 1873821, "plan": "pdfs/apartments/T1/E.pdf", "floorPlan": "pdfs/floors/T1/16.pdf"}, {"apt": 74, "bld": "3 (T1)", "floor": 16, "type": "D", "rooms": 3, "area": 79.85, "outdoor": 8.29, "target": true, "storage": 4.83, "parking": 1, "storageNo": "168", "price": 1303411, "plan": "pdfs/apartments/T1/D.pdf", "floorPlan": "pdfs/floors/T1/16.pdf"}, {"apt": 75, "bld": "3 (T1)", "floor": 16, "type": "C", "rooms": 3, "area": 78.53, "outdoor": 8.1, "target": true, "storage": 5.63, "parking": 1, "storageNo": "163", "price": 1283766, "plan": "pdfs/apartments/T1/C.pdf", "floorPlan": "pdfs/floors/T1/16.pdf"}, {"apt": 76, "bld": "3 (T1)", "floor": 16, "type": "B", "rooms": 4, "area": 105.34, "outdoor": 18.92, "target": true, "storage": 4.78, "parking": 1, "storageNo": "148", "price": 1836072, "plan": "pdfs/apartments/T1/B.pdf", "floorPlan": "pdfs/floors/T1/16.pdf"}, {"apt": 77, "bld": "3 (T1)", "floor": 16, "type": "A", "rooms": 5, "area": 139.78, "outdoor": 22.16, "target": false, "storage": 8.47, "parking": 1, "storageNo": "128", "price": null, "plan": null, "floorPlan": "pdfs/floors/T1/16.pdf"}, {"apt": 78, "bld": "3 (T1)", "floor": 17, "type": "E", "rooms": 4, "area": 107.77, "outdoor": 11.91, "target": true, "storage": 5.23, "parking": 1, "storageNo": "149", "price": 1856223, "plan": "pdfs/apartments/T1/E.pdf", "floorPlan": "pdfs/floors/T1/17.pdf"}, {"apt": 79, "bld": "3 (T1)", "floor": 17, "type": "D", "rooms": 3, "area": 79.85, "outdoor": 8.29, "target": true, "storage": 4.14, "parking": 1, "storageNo": "171", "price": 1306273, "plan": "pdfs/apartments/T1/D.pdf", "floorPlan": "pdfs/floors/T1/17.pdf"}, {"apt": 80, "bld": "3 (T1)", "floor": 17, "type": "C", "rooms": 3, "area": 78.53, "outdoor": 8.1, "target": true, "storage": 4.16, "parking": 1, "storageNo": "170", "price": 1280701, "plan": "pdfs/apartments/T1/C.pdf", "floorPlan": "pdfs/floors/T1/17.pdf"}, {"apt": 81, "bld": "3 (T1)", "floor": 17, "type": "B", "rooms": 4, "area": 105.34, "outdoor": 18.92, "target": true, "storage": 6.37, "parking": 1, "storageNo": "150", "price": 1858633, "plan": "pdfs/apartments/T1/B.pdf", "floorPlan": "pdfs/floors/T1/17.pdf"}, {"apt": 82, "bld": "3 (T1)", "floor": 17, "type": "A", "rooms": 5, "area": 139.78, "outdoor": 22.16, "target": false, "storage": 11.11, "parking": 1, "storageNo": "202", "price": null, "plan": null, "floorPlan": "pdfs/floors/T1/17.pdf"}, {"apt": 83, "bld": "3 (T1)", "floor": 18, "type": "E", "rooms": 4, "area": 107.77, "outdoor": 11.91, "target": true, "storage": 5.28, "parking": 1, "storageNo": "151", "price": 1867326, "plan": "pdfs/apartments/T1/E.pdf", "floorPlan": "pdfs/floors/T1/18.pdf"}, {"apt": 84, "bld": "3 (T1)", "floor": 18, "type": "D", "rooms": 3, "area": 79.85, "outdoor": 8.29, "target": true, "storage": 5.57, "parking": 1, "storageNo": "91", "price": 1325002, "plan": "pdfs/apartments/T1/D.pdf", "floorPlan": "pdfs/floors/T1/18.pdf"}, {"apt": 85, "bld": "3 (T1)", "floor": 18, "type": "C", "rooms": 3, "area": 78.53, "outdoor": 8.1, "target": true, "storage": 4.78, "parking": 1, "storageNo": "92", "price": 1293221, "plan": "pdfs/apartments/T1/C.pdf", "floorPlan": "pdfs/floors/T1/18.pdf"}, {"apt": 86, "bld": "3 (T1)", "floor": 18, "type": "B", "rooms": 4, "area": 105.34, "outdoor": 18.92, "target": true, "storage": 5.68, "parking": 1, "storageNo": "95", "price": 1864191, "plan": "pdfs/apartments/T1/B.pdf", "floorPlan": "pdfs/floors/T1/18.pdf"}, {"apt": 87, "bld": "3 (T1)", "floor": 18, "type": "A", "rooms": 5, "area": 139.78, "outdoor": 22.16, "target": false, "storage": 6.09, "parking": 1, "storageNo": "205", "price": null, "plan": null, "floorPlan": "pdfs/floors/T1/18.pdf"}, {"apt": 88, "bld": "3 (T1)", "floor": 19, "type": "E", "rooms": 4, "area": 107.77, "outdoor": 11.91, "target": true, "storage": 7.2, "parking": 1, "storageNo": "104", "price": 1892544, "plan": "pdfs/apartments/T1/E.pdf", "floorPlan": "pdfs/floors/T1/19.pdf"}, {"apt": 89, "bld": "3 (T1)", "floor": 19, "type": "D", "rooms": 3, "area": 79.85, "outdoor": 8.29, "target": true, "storage": 4.79, "parking": 1, "storageNo": "93", "price": 1327160, "plan": "pdfs/apartments/T1/D.pdf", "floorPlan": "pdfs/floors/T1/19.pdf"}, {"apt": 90, "bld": "3 (T1)", "floor": 19, "type": "C", "rooms": 3, "area": 78.53, "outdoor": 8.1, "target": true, "storage": 4.88, "parking": 1, "storageNo": "94", "price": 1301863, "plan": "pdfs/apartments/T1/C.pdf", "floorPlan": "pdfs/floors/T1/19.pdf"}, {"apt": 91, "bld": "3 (T1)", "floor": 19, "type": "B", "rooms": 4, "area": 105.34, "outdoor": 18.92, "target": true, "storage": 5.46, "parking": 1, "storageNo": "106", "price": 1873245, "plan": "pdfs/apartments/T1/B.pdf", "floorPlan": "pdfs/floors/T1/19.pdf"}, {"apt": 92, "bld": "3 (T1)", "floor": 19, "type": "A", "rooms": 5, "area": 139.78, "outdoor": 22.16, "target": false, "storage": 5.49, "parking": 1, "storageNo": "203", "price": null, "plan": null, "floorPlan": "pdfs/floors/T1/19.pdf"}, {"apt": 93, "bld": "3 (T1)", "floor": 20, "type": "E", "rooms": 4, "area": 107.77, "outdoor": 11.91, "target": true, "storage": 6.18, "parking": 1, "storageNo": "73", "price": 1895610, "plan": "pdfs/apartments/T1/E.pdf", "floorPlan": "pdfs/floors/T1/20.pdf"}, {"apt": 94, "bld": "3 (T1)", "floor": 20, "type": "D", "rooms": 3, "area": 79.85, "outdoor": 8.29, "target": true, "storage": 5.32, "parking": 1, "storageNo": "97", "price": 1339195, "plan": "pdfs/apartments/T1/D.pdf", "floorPlan": "pdfs/floors/T1/20.pdf"}, {"apt": 95, "bld": "3 (T1)", "floor": 20, "type": "C", "rooms": 3, "area": 78.53, "outdoor": 8.1, "target": true, "storage": 5.07, "parking": 1, "storageNo": "96", "price": 1311194, "plan": "pdfs/apartments/T1/C.pdf", "floorPlan": "pdfs/floors/T1/20.pdf"}, {"apt": 96, "bld": "3 (T1)", "floor": 20, "type": "B", "rooms": 4, "area": 105.34, "outdoor": 18.92, "target": true, "storage": 5.48, "parking": 1, "storageNo": "74", "price": 1884102, "plan": "pdfs/apartments/T1/B.pdf", "floorPlan": "pdfs/floors/T1/20.pdf"}, {"apt": 97, "bld": "3 (T1)", "floor": 20, "type": "A", "rooms": 5, "area": 139.78, "outdoor": 22.16, "target": false, "storage": 5.07, "parking": 1, "storageNo": "157", "price": null, "plan": null, "floorPlan": "pdfs/floors/T1/20.pdf"}, {"apt": 98, "bld": "3 (T1)", "floor": 21, "type": "E", "rooms": 4, "area": 107.77, "outdoor": 11.91, "target": true, "storage": 5.19, "parking": 1, "storageNo": "76", "price": 1898828, "plan": "pdfs/apartments/T1/E.pdf", "floorPlan": "pdfs/floors/T1/21.pdf"}, {"apt": 99, "bld": "3 (T1)", "floor": 21, "type": "D", "rooms": 3, "area": 79.85, "outdoor": 8.29, "target": true, "storage": 4.15, "parking": 1, "storageNo": "89", "price": 1338315, "plan": "pdfs/apartments/T1/D.pdf", "floorPlan": "pdfs/floors/T1/21.pdf"}, {"apt": 100, "bld": "3 (T1)", "floor": 21, "type": "C", "rooms": 3, "area": 78.53, "outdoor": 8.1, "target": true, "storage": 4.16, "parking": 1, "storageNo": "90", "price": 1312158, "plan": "pdfs/apartments/T1/C.pdf", "floorPlan": "pdfs/floors/T1/21.pdf"}, {"apt": 101, "bld": "3 (T1)", "floor": 21, "type": "B", "rooms": 4, "area": 105.34, "outdoor": 18.92, "target": true, "storage": 5.42, "parking": 1, "storageNo": "75", "price": 1894351, "plan": "pdfs/apartments/T1/B.pdf", "floorPlan": "pdfs/floors/T1/21.pdf"}, {"apt": 102, "bld": "3 (T1)", "floor": 21, "type": "A", "rooms": 5, "area": 139.78, "outdoor": 22.16, "target": false, "storage": 5.76, "parking": 1, "storageNo": "159", "price": null, "plan": null, "floorPlan": "pdfs/floors/T1/21.pdf"}, {"apt": 103, "bld": "3 (T1)", "floor": 22, "type": "E", "rooms": 4, "area": 107.77, "outdoor": 11.91, "target": true, "storage": 7.77, "parking": 1, "storageNo": "154", "price": 1929311, "plan": "pdfs/apartments/T1/E.pdf", "floorPlan": "pdfs/floors/T1/22.pdf"}, {"apt": 104, "bld": "3 (T1)", "floor": 22, "type": "D", "rooms": 3, "area": 79.85, "outdoor": 8.29, "target": true, "storage": 6.02, "parking": 1, "storageNo": "87", "price": 1360626, "plan": "pdfs/apartments/T1/D.pdf", "floorPlan": "pdfs/floors/T1/22.pdf"}, {"apt": 105, "bld": "3 (T1)", "floor": 22, "type": "C", "rooms": 3, "area": 78.53, "outdoor": 8.1, "target": true, "storage": 7.53, "parking": 1, "storageNo": "88", "price": 1345828, "plan": "pdfs/apartments/T1/C.pdf", "floorPlan": "pdfs/floors/T1/22.pdf"}, {"apt": 106, "bld": "3 (T1)", "floor": 22, "type": "B", "rooms": 4, "area": 105.34, "outdoor": 18.92, "target": true, "storage": 7.47, "parking": 1, "storageNo": "155", "price": 1920753, "plan": "pdfs/apartments/T1/B.pdf", "floorPlan": "pdfs/floors/T1/22.pdf"}, {"apt": 107, "bld": "3 (T1)", "floor": 22, "type": "A", "rooms": 5, "area": 139.78, "outdoor": 22.16, "target": false, "storage": 6.15, "parking": 1, "storageNo": "160", "price": null, "plan": null, "floorPlan": "pdfs/floors/T1/22.pdf"}, {"apt": 108, "bld": "3 (T1)", "floor": 23, "type": "E", "rooms": 4, "area": 107.77, "outdoor": 11.91, "target": true, "storage": 6.81, "parking": 1, "storageNo": "183", "price": 1932746, "plan": "pdfs/apartments/T1/E.pdf", "floorPlan": "pdfs/floors/T1/23.pdf"}, {"apt": 109, "bld": "3 (T1)", "floor": 23, "type": "D", "rooms": 3, "area": 79.85, "outdoor": 8.29, "target": true, "storage": 5.68, "parking": 1, "storageNo": "180", "price": 1366071, "plan": "pdfs/apartments/T1/D.pdf", "floorPlan": "pdfs/floors/T1/23.pdf"}, {"apt": 110, "bld": "3 (T1)", "floor": 23, "type": "C", "rooms": 3, "area": 78.53, "outdoor": 8.1, "target": true, "storage": 4.01, "parking": 1, "storageNo": "194", "price": 1326732, "plan": "pdfs/apartments/T1/C.pdf", "floorPlan": "pdfs/floors/T1/23.pdf"}, {"apt": 111, "bld": "3 (T1)", "floor": 23, "type": "B", "rooms": 4, "area": 105.34, "outdoor": 18.92, "target": true, "storage": 8.44, "parking": 1, "storageNo": "161", "price": 1938998, "plan": "pdfs/apartments/T1/B.pdf", "floorPlan": "pdfs/floors/T1/23.pdf"}, {"apt": 112, "bld": "3 (T1)", "floor": 23, "type": "A", "rooms": 5, "area": 139.78, "outdoor": 22.16, "target": false, "storage": 7.11, "parking": 1, "storageNo": "177", "price": null, "plan": null, "floorPlan": "pdfs/floors/T1/23.pdf"}, {"apt": 113, "bld": "3 (T1)", "floor": 24, "type": "E", "rooms": 4, "area": 107.77, "outdoor": 11.91, "target": true, "storage": 6.36, "parking": 1, "storageNo": "193", "price": 1940053, "plan": "pdfs/apartments/T1/E.pdf", "floorPlan": "pdfs/floors/T1/24.pdf"}, {"apt": 114, "bld": "3 (T1)", "floor": 24, "type": "D", "rooms": 3, "area": 79.85, "outdoor": 8.29, "target": true, "storage": 4.57, "parking": 1, "storageNo": "187", "price": 1365537, "plan": "pdfs/apartments/T1/D.pdf", "floorPlan": "pdfs/floors/T1/24.pdf"}, {"apt": 115, "bld": "3 (T1)", "floor": 24, "type": "C", "rooms": 3, "area": 78.53, "outdoor": 8.1, "target": true, "storage": 4.56, "parking": 1, "storageNo": "188", "price": 1338843, "plan": "pdfs/apartments/T1/C.pdf", "floorPlan": "pdfs/floors/T1/24.pdf"}, {"apt": 116, "bld": "3 (T1)", "floor": 24, "type": "B", "rooms": 4, "area": 105.34, "outdoor": 18.92, "target": true, "storage": 4.89, "parking": 1, "storageNo": "162", "price": 1922366, "plan": "pdfs/apartments/T1/B.pdf", "floorPlan": "pdfs/floors/T1/24.pdf"}, {"apt": 117, "bld": "3 (T1)", "floor": 24, "type": "A", "rooms": 5, "area": 139.78, "outdoor": 22.16, "target": false, "storage": 7.49, "parking": 1, "storageNo": "178", "price": null, "plan": null, "floorPlan": "pdfs/floors/T1/24.pdf"}, {"apt": 118, "bld": "3 (T1)", "floor": 25, "type": "E", "rooms": 4, "area": 107.77, "outdoor": 11.91, "target": true, "storage": 5.46, "parking": 1, "storageNo": "181", "price": 1943830, "plan": "pdfs/apartments/T1/E.pdf", "floorPlan": "pdfs/floors/T1/25.pdf"}, {"apt": 119, "bld": "3 (T1)", "floor": 25, "type": "D", "rooms": 3, "area": 79.85, "outdoor": 8.29, "target": true, "storage": 4.56, "parking": 1, "storageNo": "189", "price": 1373467, "plan": "pdfs/apartments/T1/D.pdf", "floorPlan": "pdfs/floors/T1/25.pdf"}, {"apt": 120, "bld": "3 (T1)", "floor": 25, "type": "C", "rooms": 3, "area": 78.53, "outdoor": 8.1, "target": true, "storage": 5.67, "parking": 1, "storageNo": "105", "price": 1355346, "plan": "pdfs/apartments/T1/C.pdf", "floorPlan": "pdfs/floors/T1/25.pdf"}, {"apt": 121, "bld": "3 (T1)", "floor": 25, "type": "B", "rooms": 4, "area": 105.34, "outdoor": 18.92, "target": true, "storage": 5.51, "parking": 1, "storageNo": "182", "price": 1937867, "plan": "pdfs/apartments/T1/B.pdf", "floorPlan": "pdfs/floors/T1/25.pdf"}, {"apt": 122, "bld": "3 (T1)", "floor": 25, "type": "A", "rooms": 5, "area": 139.78, "outdoor": 22.16, "target": false, "storage": 5.34, "parking": 1, "storageNo": "158", "price": null, "plan": null, "floorPlan": "pdfs/floors/T1/25.pdf"}, {"apt": 123, "bld": "3 (T1)", "floor": 26, "type": "E", "rooms": 4, "area": 107.77, "outdoor": 11.91, "target": true, "storage": 5.38, "parking": 1, "storageNo": "192", "price": 1953941, "plan": "pdfs/apartments/T1/E.pdf", "floorPlan": "pdfs/floors/T1/26.pdf"}, {"apt": 124, "bld": "3 (T1)", "floor": 26, "type": "D", "rooms": 3, "area": 79.85, "outdoor": 8.29, "target": true, "storage": 4.2, "parking": 1, "storageNo": "118", "price": 1378664, "plan": "pdfs/apartments/T1/D.pdf", "floorPlan": "pdfs/floors/T1/26.pdf"}, {"apt": 125, "bld": "3 (T1)", "floor": 26, "type": "C", "rooms": 3, "area": 78.53, "outdoor": 8.1, "target": true, "storage": 4.51, "parking": 1, "storageNo": "119", "price": 1354211, "plan": "pdfs/apartments/T1/C.pdf", "floorPlan": "pdfs/floors/T1/26.pdf"}, {"apt": 126, "bld": "3 (T1)", "floor": 26, "type": "B", "rooms": 4, "area": 105.34, "outdoor": 18.92, "target": false, "storage": 6.49, "parking": 1, "storageNo": "196", "price": null, "plan": null, "floorPlan": "pdfs/floors/T1/26.pdf"}, {"apt": 127, "bld": "3 (T1)", "floor": 26, "type": "A", "rooms": 5, "area": 139.78, "outdoor": 22.16, "target": false, "storage": 4.99, "parking": 1, "storageNo": "80", "price": null, "plan": null, "floorPlan": "pdfs/floors/T1/26.pdf"}, {"apt": 128, "bld": "3 (T1)", "floor": 27, "type": "E", "rooms": 4, "area": 107.77, "outdoor": 11.91, "target": true, "storage": 4.7, "parking": 1, "storageNo": "114", "price": 1948633, "plan": "pdfs/apartments/T1/E.pdf", "floorPlan": "pdfs/floors/T1/27.pdf"}, {"apt": 129, "bld": "3 (T1)", "floor": 27, "type": "D", "rooms": 3, "area": 79.85, "outdoor": 8.29, "target": true, "storage": 4.49, "parking": 1, "storageNo": "120", "price": 1380928, "plan": "pdfs/apartments/T1/D.pdf", "floorPlan": "pdfs/floors/T1/27.pdf"}, {"apt": 130, "bld": "3 (T1)", "floor": 27, "type": "C", "rooms": 3, "area": 78.53, "outdoor": 8.1, "target": true, "storage": 4.91, "parking": 1, "storageNo": "122", "price": 1357333, "plan": "pdfs/apartments/T1/C.pdf", "floorPlan": "pdfs/floors/T1/27.pdf"}, {"apt": 131, "bld": "3 (T1)", "floor": 27, "type": "B", "rooms": 4, "area": 105.34, "outdoor": 18.92, "target": false, "storage": 5.51, "parking": 1, "storageNo": "107", "price": null, "plan": null, "floorPlan": "pdfs/floors/T1/27.pdf"}, {"apt": 132, "bld": "3 (T1)", "floor": 27, "type": "A", "rooms": 5, "area": 139.78, "outdoor": 22.16, "target": false, "storage": 8.21, "parking": 1, "storageNo": "129", "price": null, "plan": null, "floorPlan": "pdfs/floors/T1/27.pdf"}, {"apt": 133, "bld": "3 (T1)", "floor": 28, "type": "E", "rooms": 4, "area": 107.77, "outdoor": 11.91, "target": true, "storage": 4.89, "parking": 1, "storageNo": "84", "price": 1950116, "plan": "pdfs/apartments/T1/E.pdf", "floorPlan": "pdfs/floors/T1/28.pdf"}, {"apt": 134, "bld": "3 (T1)", "floor": 28, "type": "D", "rooms": 3, "area": 79.85, "outdoor": 8.29, "target": true, "storage": 3.97, "parking": 1, "storageNo": "110", "price": 1376868, "plan": "pdfs/apartments/T1/D.pdf", "floorPlan": "pdfs/floors/T1/28.pdf"}, {"apt": 135, "bld": "3 (T1)", "floor": 28, "type": "C", "rooms": 3, "area": 78.53, "outdoor": 8.1, "target": true, "storage": 9.65, "parking": 1, "storageNo": "47", "price": 1394335, "plan": "pdfs/apartments/T1/C.pdf", "floorPlan": "pdfs/floors/T1/28.pdf"}, {"apt": 136, "bld": "3 (T1)", "floor": 28, "type": "B", "rooms": 4, "area": 105.34, "outdoor": 18.92, "target": false, "storage": 6.13, "parking": 1, "storageNo": "86", "price": null, "plan": null, "floorPlan": "pdfs/floors/T1/28.pdf"}, {"apt": 137, "bld": "3 (T1)", "floor": 28, "type": "A", "rooms": 5, "area": 139.78, "outdoor": 22.16, "target": false, "storage": 7.49, "parking": 1, "storageNo": "103", "price": null, "plan": null, "floorPlan": "pdfs/floors/T1/28.pdf"}, {"apt": 138, "bld": "3 (T1)", "floor": 29, "type": "E", "rooms": 4, "area": 107.77, "outdoor": 11.91, "target": true, "storage": 6.81, "parking": 1, "storageNo": "108", "price": 1965104, "plan": "pdfs/apartments/T1/E.pdf", "floorPlan": "pdfs/floors/T1/29.pdf"}, {"apt": 139, "bld": "3 (T1)", "floor": 29, "type": "D", "rooms": 3, "area": 79.85, "outdoor": 8.29, "target": true, "storage": 4.54, "parking": 1, "storageNo": "43", "price": 1381318, "plan": "pdfs/apartments/T1/D.pdf", "floorPlan": "pdfs/floors/T1/29.pdf"}, {"apt": 140, "bld": "3 (T1)", "floor": 29, "type": "C", "rooms": 3, "area": 78.53, "outdoor": 8.1, "target": true, "storage": 11.44, "parking": 1, "storageNo": "44", "price": 1408308, "plan": "pdfs/apartments/T1/C.pdf", "floorPlan": "pdfs/floors/T1/29.pdf"}, {"apt": 141, "bld": "3 (T1)", "floor": 29, "type": "B", "rooms": 4, "area": 105.34, "outdoor": 18.92, "target": false, "storage": 7.82, "parking": 1, "storageNo": "156", "price": null, "plan": null, "floorPlan": "pdfs/floors/T1/29.pdf"}, {"apt": 142, "bld": "3 (T1)", "floor": 29, "type": "A", "rooms": 5, "area": 139.78, "outdoor": 22.16, "target": false, "storage": 7.82, "parking": 1, "storageNo": "85", "price": null, "plan": null, "floorPlan": "pdfs/floors/T1/29.pdf"}, {"apt": 143, "bld": "3 (T1)", "floor": 30, "type": "E", "rooms": 4, "area": 107.77, "outdoor": 11.91, "target": true, "storage": 5.47, "parking": 1, "storageNo": "113", "price": 1954644, "plan": "pdfs/apartments/T1/E-143.pdf", "floorPlan": "pdfs/floors/T1/30.pdf"}, {"apt": 144, "bld": "3 (T1)", "floor": 30, "type": "D", "rooms": 3, "area": 79.85, "outdoor": 8.29, "target": true, "storage": 7.11, "parking": 1, "storageNo": "27", "price": 1401380, "plan": "pdfs/apartments/T1/D-144.pdf", "floorPlan": "pdfs/floors/T1/30.pdf"}, {"apt": 145, "bld": "3 (T1)", "floor": 30, "type": "C", "rooms": 3, "area": 78.53, "outdoor": 8.1, "target": true, "storage": 7.49, "parking": 1, "storageNo": "28", "price": 1377473, "plan": "pdfs/apartments/T1/C-145.pdf", "floorPlan": "pdfs/floors/T1/30.pdf"}, {"apt": 146, "bld": "3 (T1)", "floor": 30, "type": "B", "rooms": 4, "area": 105.34, "outdoor": 18.92, "target": false, "storage": 6.4, "parking": 1, "storageNo": "123", "price": null, "plan": null, "floorPlan": "pdfs/floors/T1/30.pdf"}, {"apt": 147, "bld": "3 (T1)", "floor": 30, "type": "A", "rooms": 5, "area": 139.79, "outdoor": 22.16, "target": false, "storage": 5.83, "parking": 1, "storageNo": "82", "price": null, "plan": null, "floorPlan": "pdfs/floors/T1/30.pdf"}, {"apt": 148, "bld": "3 (T1)", "floor": 31, "type": "PN-C", "rooms": 5, "area": 143.65, "outdoor": 71.81, "target": false, "storage": 6.45, "parking": 1, "storageNo": "81", "price": null, "plan": null, "floorPlan": "pdfs/floors/T1/31.pdf"}, {"apt": 149, "bld": "3 (T1)", "floor": 31, "type": "PN-B", "rooms": 5, "area": 157.97, "outdoor": 47.34, "target": false, "storage": 7.11, "parking": 1, "storageNo": "102", "price": null, "plan": null, "floorPlan": "pdfs/floors/T1/31.pdf"}, {"apt": 150, "bld": "3 (T1)", "floor": 31, "type": "PN-A", "rooms": 5, "area": 182.76, "outdoor": 42.46, "target": false, "storage": 8.73, "parking": 1, "storageNo": "79", "price": null, "plan": null, "floorPlan": "pdfs/floors/T1/31.pdf"}];
+const $ = id => document.getElementById(id);
+const fmt = n => n==null ? '–' : '₪' + n.toLocaleString('en-US');
+const isPN = a => a.type.startsWith('PN');
+const MODEL_KEYS = new Set(['M1_A', 'M1_B', 'M1_C', 'M1_CG', 'M1_D', 'M2_A', 'M2_B', 'M2_B1', 'M2_C', 'M2_D', 'M2_D1', 'T1_A', 'T1_B', 'T1_C', 'T1_C1', 'T1_D', 'T1_D2', 'T1_E', 'T1_E2']);
+function floorPlans(L){
+  const fp=[...new Map(L.filter(x=>x.floorPlan).sort((x,y)=>x.floor-y.floor).map(x=>[x.floor,x.floorPlan])).entries()];
+  if(!fp.length) return '–';
+  if(fp.length===1) return `<a href="${fp[0][1]}" target="_blank">PDF (fl. ${fp[0][0]})</a>`;
+  return `<select class="fp" aria-label="Open floor plan PDF" onchange="if(this.value){window.open(this.value,'_blank');this.selectedIndex=0}"><option value="">PDF: floor…</option>${fp.map(([f,u])=>`<option value="${u}">Floor ${f}</option>`).join('')}</select>`;
+}
+// payments at signing: 7% on contract day, 13% within 45 days (independent of the mortgage)
+const upCell = a => a.price
+  ? `<td class="num" title="7% on the signing day">${fmt(Math.round(a.price*0.07))}</td><td class="num" title="13% within 45 days of signing">${fmt(Math.round(a.price*0.13))}</td>`
+  : '<td class="num mut">–</td><td class="num mut">–</td>';
+const keyplanOf = a => a.plan ? 'keyplans/'+a.plan.replace('pdfs/apartments/','').replace(/\.pdf$/,'').replace('/','_')+'.svg' : null;
+const locImg = a => { const k=keyplanOf(a); return k ? `<button type="button" class="locBtn" data-key="${a.bld}|${a.apt}" title="Where apartment ${a.apt} sits on floor ${a.floor}. Click to enlarge"><img src="${k}" alt="Location of apartment ${a.apt} on its floor" loading="lazy"></button>` : '<span class="mut" title="No plan published for this apartment">–</span>'; };
+const modelKey = a => a.bld.split('(')[1].slice(0,-1)+'_'+a.type;
+const bc = b => 'b'+b.trim()[0];
+const badge = b => `<span class="bt ${bc(b)}">${b}</span>`;
+DATA.forEach(a => { a.ppsqm = a.price ? Math.round(a.price / a.area) : null; });
+
+const state = { bld:new Set(), rooms:new Set(), sort:'price', dir:1 };
+const blds = [...new Set(DATA.map(a=>a.bld))].sort();
+const roomsL = [...new Set(DATA.map(a=>a.rooms))].sort((a,b)=>a-b);
+
+function chips(el, vals, set, label){
+  vals.forEach(v=>{ const b=document.createElement('button'); b.className='chip'+(el.id==='fBld'?' '+bc(v):''); b.textContent=label(v);
+    b.onclick=()=>{ set.has(v)?set.delete(v):set.add(v); b.classList.toggle('on'); render(); }; el.appendChild(b); });
+}
+chips($('fBld'), blds, state.bld, v=>'Bldg '+v);
+chips($('fRooms'), roomsL, state.rooms, v=>v+' rooms');
+function fillTypes(){
+  const cur=$('fType').value, sel=$('fType');
+  const types=[...new Set(DATA.filter(a=>!state.bld.size||state.bld.has(a.bld)).map(a=>a.type))].sort();
+  sel.innerHTML='<option value="">All types</option>'+types.map(t=>`<option ${t===cur?'selected':''}>${t}</option>`).join('');
+}
+
+const COLS = [
+  ['star','★',1],['taken','Status',1],['bld','Building'],['apt','Apt #'],['floor','Floor',1],['type','Type'],['loc','Location'],['rooms','Rooms',1],['area','Area m²',1],['outdoor','Balcony/garden m²',1],
+  ['storage','Storage m²',1],['parking','Parking',1],['target','Target price'],['price','Price',1],['pay7','7% day 1',1],['pay13','13% day 45',1],['ppsqm','₪/m²',1],['monthly','Monthly payment',1],['loan','Mortgage',1],['plan','Apt plan'],['floorPlan','Floor plan'],['view3d','3D']
+];
+const thead=$('mainT').querySelector('thead tr');
+COLS.forEach(([k,l])=>{ const th=document.createElement('th'); th.textContent=l; th.dataset.k=k;
+  th.onclick=e=>{ if(e.target.closest('.thFilter')) return; if(state.sort===k) state.dir*=-1; else {state.sort=k; state.dir=1;} render(); }; thead.appendChild(th); });
+
+// ---- Apt # filter: pick apartment numbers in a pop-up (numbers repeat per building, so keys are building|apt) ----
+const aptSel = new Set();
+try{ (JSON.parse(localStorage.getItem('aptSel')||'[]')).forEach(k=>aptSel.add(k)); }catch(e){}
+function saveAptSel(){ try{ localStorage.setItem('aptSel',JSON.stringify([...aptSel])); }catch(e){} }
+const aptPop=document.createElement('div'); aptPop.className='aptPop'; aptPop.hidden=true; aptPop.setAttribute('role','dialog'); aptPop.setAttribute('aria-label','Filter by apartment number');
+document.body.appendChild(aptPop);
+const aptKey=a=>a.bld+'|'+a.apt;
+function parseNums(s){
+  const out=new Set();
+  s.split(/[\s,;]+/).forEach(tok=>{ const m=tok.match(/^(\d+)(?:-(\d+))?$/); if(!m) return;
+    let a=+m[1], b=m[2]?+m[2]:a; if(a>b) [a,b]=[b,a]; for(let i=a;i<=Math.min(b,a+400);i++) out.add(i); });
+  return out;
+}
+function buildAptPop(){
+  const groups=blds.map(b=>({b, apts:DATA.filter(a=>a.bld===b).sort((x,y)=>x.apt-y.apt)}));
+  aptPop.innerHTML=`<div class="apHead"><b>Apartment numbers</b><button type="button" class="apX" data-op="close" aria-label="Close">✕</button></div>
+    <div class="apQuick"><input type="text" id="apType" placeholder="Type numbers, e.g. 12, 40-45" aria-label="Apartment numbers to select"><button type="button" data-op="addTyped">Select</button></div>
+    <div class="apAll"><button type="button" data-op="all">All</button><button type="button" data-op="none">None</button><span class="mut" id="apCount"></span></div>
+    <div class="apBody">${groups.map(g=>`<div class="apGroup ${bc(g.b)}"><div class="apGH">${badge(g.b)}<span><button type="button" data-op="ball" data-b="${g.b}">All</button><button type="button" data-op="bnone" data-b="${g.b}">None</button></span></div>
+      <div class="apGrid">${g.apts.map(a=>`<label class="${a.taken?'tk':''}" title="Floor ${a.floor} · type ${a.type} · ${a.rooms} rooms${a.taken?' · marked taken':''}"><input type="checkbox" value="${aptKey(a)}" ${aptSel.has(aptKey(a))?'checked':''}>${a.apt}</label>`).join('')}</div></div>`).join('')}</div>
+    <div class="apFoot"><span class="mut">Nothing ticked = show every apartment. Grey = marked taken.</span><span class="apBtns"><button type="button" data-op="clear">Clear</button><button type="button" class="apApply" data-op="apply">Apply</button></span></div>`;
+  updApCount();
+}
+function updApCount(){ const c=aptPop.querySelector('#apCount'); if(c) c.textContent=aptSel.size?`${aptSel.size} selected`:'showing all'; }
+function placeAptPop(){
+  const btn=$('aptFilterBtn'); if(!btn) return;
+  const r=btn.getBoundingClientRect(), w=Math.min(360,innerWidth-16);
+  aptPop.style.width=w+'px';
+  aptPop.style.left=Math.max(8,Math.min(r.left,innerWidth-w-8))+'px';
+  const below=r.bottom+6, h=Math.min(520,innerHeight-16);
+  aptPop.style.maxHeight=h+'px';
+  aptPop.style.top=(below+h>innerHeight? Math.max(8,innerHeight-h-8): below)+'px';
+}
+function openAptPop(){ buildAptPop(); aptPop.hidden=false; placeAptPop(); aptPop.querySelector('#apType').focus(); }
+function closeAptPop(){ aptPop.hidden=true; }
+function applyAptSel(){ saveAptSel(); updApCount(); render(); }
+thead.addEventListener('click',e=>{ const f=e.target.closest('.thFilter'); if(!f) return; e.stopPropagation();
+  if(f.id==='aptFilterBtn'){ typePop.hidden=true; aptPop.hidden?openAptPop():closeAptPop(); }
+  if(f.id==='typeFilterBtn'){ closeAptPop(); typePop.hidden?openTypePop():(typePop.hidden=true); } });
+
+// ---- Type filter: same pop-up idea, types grouped by building (types repeat between buildings) ----
+const typeSel=new Set();
+try{ (JSON.parse(localStorage.getItem('typeSel')||'[]')).forEach(k=>typeSel.add(k)); }catch(e){}
+function saveTypeSel(){ try{ localStorage.setItem('typeSel',JSON.stringify([...typeSel])); }catch(e){} }
+const typePop=document.createElement('div'); typePop.className='aptPop'; typePop.hidden=true; typePop.setAttribute('role','dialog'); typePop.setAttribute('aria-label','Filter by apartment type');
+document.body.appendChild(typePop);
+function buildTypePop(){
+  const groups=blds.map(b=>{ const m=new Map(); DATA.filter(a=>a.bld===b).forEach(a=>{ if(!m.has(a.type)) m.set(a.type,[]); m.get(a.type).push(a); });
+    return {b, types:[...m.entries()].sort((x,y)=>x[0].localeCompare(y[0]))}; });
+  typePop.innerHTML=`<div class="apHead"><b>Apartment types</b><button type="button" class="apX" data-op="close" aria-label="Close">✕</button></div>
+    <div class="apAll"><button type="button" data-op="all">All</button><button type="button" data-op="none">None</button><span class="mut" id="tpCount"></span></div>
+    <div class="apBody">${groups.map(g=>`<div class="apGroup ${bc(g.b)}"><div class="apGH">${badge(g.b)}<span><button type="button" data-op="ball" data-b="${g.b}">All</button><button type="button" data-op="bnone" data-b="${g.b}">None</button></span></div>
+      <div class="tpGrid">${g.types.map(([ty,L])=>{ const k=g.b+'|'+ty, rep=L.find(x=>x.plan&&!/-\d+\.pdf$/.test(x.plan))||L.find(x=>x.plan), src=rep&&keyplanOf(rep);
+        return `<label title="${L.length} apartments · ${L[0].rooms} rooms"><input type="checkbox" value="${k}" ${typeSel.has(k)?'checked':''}>${src?`<img src="${src}" alt="">`:'<span class="noimg">–</span>'}<b>${ty}</b><span class="mut">${L[0].rooms}r · ${L.length}</span></label>`; }).join('')}</div></div>`).join('')}</div>
+    <div class="apFoot"><span class="mut">Nothing ticked = show every type.</span><span class="apBtns"><button type="button" data-op="clear">Clear</button><button type="button" class="apApply" data-op="apply">Apply</button></span></div>`;
+  updTp();
+}
+function updTp(){ const c=typePop.querySelector('#tpCount'); if(c) c.textContent=typeSel.size?`${typeSel.size} selected`:'showing all'; }
+function openTypePop(){
+  buildTypePop(); typePop.hidden=false;
+  const r=$('typeFilterBtn').getBoundingClientRect(), w=Math.min(380,innerWidth-16), h=Math.min(560,innerHeight-16);
+  typePop.style.width=w+'px'; typePop.style.maxHeight=h+'px';
+  typePop.style.left=Math.max(8,Math.min(r.left,innerWidth-w-8))+'px';
+  typePop.style.top=(r.bottom+6+h>innerHeight?Math.max(8,innerHeight-h-8):r.bottom+6)+'px';
+}
+function applyType(){ saveTypeSel(); updTp(); render(); }
+typePop.addEventListener('change',e=>{ const cb=e.target; if(cb.type!=='checkbox') return; cb.checked?typeSel.add(cb.value):typeSel.delete(cb.value); applyType(); });
+typePop.addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  const op=b.dataset.op, boxes=[...typePop.querySelectorAll('input[type=checkbox]')];
+  const set=(list,on)=>list.forEach(cb=>{ cb.checked=on; on?typeSel.add(cb.value):typeSel.delete(cb.value); });
+  if(op==='close'||op==='apply'){ typePop.hidden=true; return; }
+  if(op==='clear'){ set(boxes,false); applyType(); typePop.hidden=true; return; }
+  if(op==='all') set(boxes,true);
+  if(op==='none') set(boxes,false);
+  if(op==='ball'||op==='bnone') set(boxes.filter(cb=>cb.value.startsWith(b.dataset.b+'|')),op==='ball');
+  applyType();
+});
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') typePop.hidden=true; });
+document.addEventListener('mousedown',e=>{ if(!typePop.hidden&&!typePop.contains(e.target)&&!e.target.closest('.thFilter')) typePop.hidden=true; });
+aptPop.addEventListener('change',e=>{ const cb=e.target; if(cb.type!=='checkbox') return; cb.checked?aptSel.add(cb.value):aptSel.delete(cb.value); applyAptSel(); });
+aptPop.addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  const op=b.dataset.op, boxes=[...aptPop.querySelectorAll('input[type=checkbox]')];
+  const set=(list,on)=>list.forEach(cb=>{ cb.checked=on; on?aptSel.add(cb.value):aptSel.delete(cb.value); });
+  if(op==='close'||op==='apply') return closeAptPop();
+  if(op==='clear'){ aptSel.clear(); boxes.forEach(cb=>cb.checked=false); applyAptSel(); return closeAptPop(); }
+  if(op==='all') set(boxes,true);
+  if(op==='none') set(boxes,false);
+  if(op==='ball'||op==='bnone') set(boxes.filter(cb=>cb.value.startsWith(b.dataset.b+'|')),op==='ball');
+  if(op==='addTyped'){ const nums=parseNums(aptPop.querySelector('#apType').value); set(boxes.filter(cb=>nums.has(+cb.value.split('|')[1])),true); }
+  applyAptSel();
+});
+aptPop.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.id==='apType'){ e.preventDefault(); aptPop.querySelector('[data-op=addTyped]').click(); } });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!aptPop.hidden) closeAptPop(); });
+document.addEventListener('mousedown',e=>{ if(!aptPop.hidden&&!aptPop.contains(e.target)&&!e.target.closest('.thFilter')) closeAptPop(); });
+addEventListener('resize',()=>{ if(!aptPop.hidden) placeAptPop(); });
+addEventListener('scroll',()=>{ if(!aptPop.hidden) placeAptPop(); },{passive:true});
+
+const num = id => { const v=$(id).value; return v===''?null:+v; };
+
+// ---- mortgage (Spitzer / annuity: equal monthly payments) ----
+const LTV_CAP = 0.75;   // Bank of Israel cap on loan-to-value for a first / only home
+function payment(L, years, ratePct){
+  const n = years*12, r = ratePct/100/12;
+  if(L<=0) return 0;
+  return r===0 ? L/n : L*r/(1-Math.pow(1+r,-n));
+}
+function mortgageFor(a){
+  const eq=Math.max(0,num('mEq')||0), years=+$('mYears').value, rate=Math.max(0,num('mRate')||0);
+  if(!a.price){ a.loan=null; a.monthly=null; a.ltv=null; return; }
+  a.loan=Math.max(0,a.price-eq);
+  a.monthly=Math.round(payment(a.loan,years,rate));
+  a.ltv=a.loan/a.price;
+  a.repaid=a.monthly*years*12;
+}
+function mortCells(a){
+  if(a.price==null) return '<td class="num mut">–</td><td class="num mut">–</td>';
+  const years=+$('mYears').value, over=a.ltv>LTV_CAP, max=num('mMax'), tooMuch=max!=null&&a.monthly>max;
+  const tip=a.loan>0?`Borrow ${fmt(a.loan)} (${Math.round(a.ltv*100)}% of the price) over ${years} years: total repaid ${fmt(a.repaid)}, of which interest ${fmt(a.repaid-a.loan)}`:'Your own money covers the full price';
+  return `<td class="num mon${tooMuch?' over':''}" title="${tip}">${a.loan>0?fmt(a.monthly):'₪0'}</td>`+
+         `<td class="num${over?' warn':''}" title="${tip}${over?' · above the usual 75% loan-to-value limit':''}">${fmt(a.loan)}${over?' ⚠':''}</td>`;
+}
+function calcNote(list){
+  const eq=Math.max(0,num('mEq')||0), years=+$('mYears').value, rate=Math.max(0,num('mRate')||0);
+  const P=list.filter(a=>a.price), ok=P.filter(a=>a.ltv<=LTV_CAP);
+  const minP=P.length?Math.min(...P.map(a=>a.monthly)):null;
+  const need=P.length?Math.round(Math.min(...P.map(a=>a.price))*(1-LTV_CAP)):null;
+  $('calcNote').innerHTML=P.length?
+    `With ${fmt(eq)} down, over ${years} years at ${rate}%: lowest monthly payment ${fmt(minP)}. `+
+    `${ok.length} of ${P.length} priced apartments shown stay within a 75% mortgage `+
+    `(the cheapest needs at least ${fmt(need)} of your own money). `+
+    `<span class="mut">Equal monthly payments (Spitzer). Excludes lawyer, purchase tax, insurance and indexation; a bank's offer will differ.</span>`
+    : 'No priced apartments match the current filters.';
+}
+['mEq','mRate','mMax'].forEach(id=>$(id).addEventListener('input',()=>{saveCalc();render();}));
+$('mYears').addEventListener('input',()=>{$('mYearsVal').textContent=$('mYears').value;saveCalc();render();});
+// ---- my turn: taken marks + ranked shortlist (manual, local only) ----
+const keyOf = a => a.bld+'|'+a.apt;
+const Q = { num:117, taken:{}, short:[] };
+try{ const s=JSON.parse(localStorage.getItem('queue')||'null'); if(s){ Object.assign(Q,s); } }catch(e){}
+$('qNum').value=Q.num;
+try{ const v=JSON.parse(localStorage.getItem('queueView')||'null'); if(v){ $('qShow').value=v.show; $('qStar').value=v.star; } }catch(e){}
+function saveQ(){ try{ localStorage.setItem('queue',JSON.stringify(Q)); localStorage.setItem('queueView',JSON.stringify({show:$('qShow').value,star:$('qStar').value})); }catch(e){} }
+const byKey = Object.fromEntries(DATA.map(a=>[keyOf(a),a]));
+function applyQ(){
+  Q.short = Q.short.filter(k=>byKey[k]);
+  const rank = Object.fromEntries(Q.short.map((k,i)=>[k,i+1]));
+  DATA.forEach(a=>{ a.key=keyOf(a); a.taken=!!Q.taken[a.key]; a.star=rank[a.key]||null; });
+}
+const aptLabel = a => `${badge(a.bld)} apt <b>${a.apt}</b> · floor ${a.floor} · type ${a.type} · ${a.rooms} rooms · ${a.area.toFixed(1)} m²`;
+function renderTurn(){
+  const pool=DATA.filter(a=>a.target), takenN=pool.filter(a=>a.taken).length, left=pool.length-takenN;
+  const ahead=Math.max(0,(+$('qNum').value||1)-1), stillAhead=Math.max(0,ahead-takenN);
+  const est=Math.max(0,pool.length-ahead);
+  const sl=Q.short.map(k=>byKey[k]), slFree=sl.filter(a=>!a.taken);
+  $('qStats').innerHTML=
+    `<span><b>${takenN}</b> of ${pool.length} target-price apartments marked taken · <b>${left}</b> left</span>`+
+    `<span>${ahead} households choose before you · <b>${stillAhead}</b> still to go</span>`+
+    `<span>If everyone ahead picks, about <b>${est}</b> will be left on your turn</span>`+
+    `<span>Shortlist: <b>${slFree.length}</b> of ${sl.length} still available${sl.length&&slFree.length<10?' <span class="warnTxt">· add backups</span>':''}</span>`;
+  const best=slFree[0];
+  $('qBest').innerHTML = best
+    ? `<span class="lbl">Your pick right now</span> ${aptLabel(best)} · <b>${fmt(best.price)}</b>${best.monthly!=null?' · '+fmt(best.monthly)+'/month':''}`
+    : (sl.length ? '<span class="lbl">Your pick right now</span> <span class="warnTxt">every shortlisted apartment is taken. Add more ★</span>'
+                 : '<span class="lbl">Your pick right now</span> <span class="mut">★ apartments in the table to build your ranked shortlist</span>');
+  $('shortHint').textContent = sl.length ? 'Top to bottom = your order of preference. The first one still available is your pick.' : 'Empty. Click ☆ in the table, or filter the table and use "Add all shown".';
+  const firstFree = best && best.key;
+  $('shortList').innerHTML = sl.map((a,i)=>`<li class="${bc(a.bld)}${a.taken?' isTaken':''}${a.key===firstFree?' best':''}">
+      <span class="rk">${i+1}</span><span class="what">${aptLabel(a)} · ${fmt(a.price)}${a.monthly!=null?' · '+fmt(a.monthly)+'/mo':''}</span>
+      <span class="tag">${a.taken?'✕ taken':(a.key===firstFree?'← your pick':'')}</span>
+      <span class="ops"><button data-op="up" data-key="${a.key}" ${i===0?'disabled':''} title="Move up">▲</button><button data-op="down" data-key="${a.key}" ${i===sl.length-1?'disabled':''} title="Move down">▼</button><button data-op="take" data-key="${a.key}" title="${a.taken?'Mark available':'Mark taken'}">${a.taken?'↺':'✕'}</button><button data-op="del" data-key="${a.key}" title="Remove from shortlist">🗑</button></span></li>`).join('');
+}
+function renderTaken(){
+  const rows=Object.entries(Q.taken).filter(([k])=>byKey[k]).sort((a,b)=>(b[1]||0)-(a[1]||0)).map(([k,ts])=>[byKey[k],ts]);
+  $('takenTitle').textContent=`✕ Removed from the pool (${rows.length})`;
+  const when=ts=>ts>1e12?new Date(ts).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'–';
+  $('takenT').querySelector('tbody').innerHTML = rows.length ? rows.map(([a,ts],i)=>`<tr class="${bc(a.bld)}">
+      <td class="num">${i+1}</td><td class="mut">${when(ts)}</td><td>${badge(a.bld)}</td><td class="num">${a.apt}</td><td class="num">${a.floor}</td>
+      <td><b>${a.type}</b></td><td class="num">${a.rooms}</td><td class="num">${a.area.toFixed(1)}</td><td class="num">${fmt(a.price)}</td>
+      <td>${a.star?'★ #'+a.star:''}</td><td><button class="restoreBtn" data-key="${a.key}">↺ Restore</button></td></tr>`).join('')
+    : '<tr><td colspan="11" class="mut">Nothing removed yet. Click <b>Available</b> on a row in the table above when someone takes it.</td></tr>';
+}
+$('takenT').addEventListener('click',e=>{ const b=e.target.closest('.restoreBtn'); if(b) toggleTaken(b.dataset.key); });
+$('sumT').addEventListener('click',openLoc);
+$('mainT').addEventListener('click',e=>{ openLoc(e); });
+$('lbX').onclick=()=>$('lb').hidden=true;
+$('lb').addEventListener('click',e=>{ if(e.target.id==='lb') $('lb').hidden=true; });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') $('lb').hidden=true; });
+function toggleStar(k){ const i=Q.short.indexOf(k); if(i>=0) Q.short.splice(i,1); else Q.short.push(k); saveQ(); render(); }
+function toggleTaken(k){ if(Q.taken[k]) delete Q.taken[k]; else Q.taken[k]=Date.now(); saveQ(); render(); }
+function openLoc(e){
+  const lb=e.target.closest('.locBtn');
+  if(lb){ const a=byKey[lb.dataset.key]; $('lbImg').src=keyplanOf(a); $('lbImg').alt='Location of apartment '+a.apt;
+    $('lbTitle').innerHTML=`${badge(a.bld)} Apt ${a.apt} · floor ${a.floor} · type ${a.type} · ${a.rooms} rooms`; $('lbPdf').href=a.plan; $('lb').hidden=false; $('lbX').focus(); return; }
+  const b=e.target.closest('button'); if(!b) return;
+  if(b.classList.contains('starBtn')) toggleStar(b.dataset.key);
+  if(b.classList.contains('takeBtn')) toggleTaken(b.dataset.key);
+}
+$('shortList').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  const k=b.dataset.key, i=Q.short.indexOf(k);
+  if(b.dataset.op==='up'&&i>0) [Q.short[i-1],Q.short[i]]=[Q.short[i],Q.short[i-1]];
+  if(b.dataset.op==='down'&&i<Q.short.length-1) [Q.short[i+1],Q.short[i]]=[Q.short[i],Q.short[i+1]];
+  if(b.dataset.op==='del') Q.short.splice(i,1);
+  if(b.dataset.op==='take'){ toggleTaken(k); return; }
+  saveQ(); render();
+});
+$('shortAdd').onclick=()=>{ filtered().sort(cmp).forEach(a=>{ if(!Q.short.includes(a.key)) Q.short.push(a.key); }); saveQ(); render(); };
+$('shortClear').onclick=()=>{ if(Q.short.length && confirm('Remove all '+Q.short.length+' apartments from your shortlist?')){ Q.short=[]; saveQ(); render(); } };
+$('bulkFree').onclick=()=>{
+  const keep=filtered(), keepSet=new Set(keep.map(a=>a.key));
+  const rest=DATA.filter(a=>a.target&&!keepSet.has(a.key));
+  if(!keep.length) return;
+  const nowTaken=rest.filter(a=>!a.taken).length, nowFree=keep.filter(a=>a.taken).length;
+  if(!confirm(`Keep the ${keep.length} apartments shown in the table as AVAILABLE`+
+              ` and mark the other ${rest.length} target-price apartments as TAKEN?\n\n`+
+              `This changes ${nowTaken} to taken and ${nowFree} to available. Use Export first if you want a backup.`)) return;
+  const ts=Date.now();
+  keep.forEach(a=>delete Q.taken[a.key]);
+  rest.forEach(a=>{ if(!Q.taken[a.key]) Q.taken[a.key]=ts; });
+  saveQ(); render();
+};
+$('qClear').onclick=()=>{ const n=Object.keys(Q.taken).length; if(n && confirm('Un-mark all '+n+' taken apartments?')){ Q.taken={}; saveQ(); render(); } };
+['qNum','qShow','qStar'].forEach(id=>$(id).addEventListener('input',()=>{ Q.num=+$('qNum').value||117; saveQ(); render(); }));
+$('qExport').onclick=()=>{
+  const blob=new Blob([JSON.stringify({savedAt:new Date().toISOString(),...Q},null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='my-turn-'+new Date().toISOString().slice(0,10)+'.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+};
+$('qImportBtn').onclick=()=>$('qImport').click();
+$('qImport').onchange=async e=>{
+  const f=e.target.files[0]; if(!f) return;
+  try{ const s=JSON.parse(await f.text()); if(typeof s!=='object'||!s.taken||!Array.isArray(s.short)) throw new Error('not a my-turn file');
+       Q.num=+s.num||117; Q.taken=s.taken; Q.short=s.short.filter(k=>byKey[k]); $('qNum').value=Q.num; saveQ(); render(); }
+  catch(err){ alert('Could not import: '+err.message); }
+  e.target.value='';
+};
+function saveCalc(){ try{localStorage.setItem('calc',JSON.stringify({eq:$('mEq').value,y:$('mYears').value,r:$('mRate').value,m:$('mMax').value}));}catch(e){} }
+try{const c=JSON.parse(localStorage.getItem('calc')||'null'); if(c){$('mEq').value=c.eq;$('mYears').value=c.y;$('mRate').value=c.r;$('mMax').value=c.m;$('mYearsVal').textContent=c.y;}}catch(e){}
+function filtered(opt={}){
+  const t=$('fType').value, tg=$('fTarget').value, sp=$('fSpecial').value;
+  const fmin=num('fFloorMin'), fmax=num('fFloorMax'), pmin=num('fPriceMin'), pmax=num('fPriceMax'), amin=num('fAreaMin'), amax=num('fAreaMax'), omin=num('fOutMin');
+  return DATA.filter(a =>
+    (!state.bld.size||state.bld.has(a.bld)) && (!state.rooms.size||state.rooms.has(a.rooms)) && (!t||a.type===t) &&
+    (fmin==null||a.floor>=fmin) && (fmax==null||a.floor<=fmax) &&
+    (pmin==null||(a.price!=null&&a.price>=pmin)) && (pmax==null||(a.price!=null&&a.price<=pmax)) &&
+    (amin==null||a.area>=amin) && (amax==null||a.area<=amax) && (omin==null||a.outdoor>=omin) &&
+    (tg===''||a.target===(tg==='1')) &&
+    (opt.ignoreShow||$('qShow').value===''||($('qShow').value==='free'?!a.taken:a.taken)) &&
+    ($('qStar').value===''||!!a.star) &&
+    (!aptSel.size||aptSel.has(keyOf(a))) &&
+    (!typeSel.size||typeSel.has(a.bld+'|'+a.type)) &&
+    (num('mMax')==null||(a.monthly!=null&&a.monthly<=num('mMax'))) &&
+    (sp===''||(sp==='garden'&&a.outdoor>=50)||(sp==='pn'&&isPN(a))||(sp==='regular'&&a.outdoor<50&&!isPN(a))));
+}
+function cmp(a,b){ const k=state.sort; let x=a[k], y=b[k];
+  if(k==='pay7'||k==='pay13'){ x=a.price; y=b.price; }
+  if(k==='taken'){ x=a.taken?1:0; y=b.taken?1:0; }
+  if(k==='view3d'){ x=MODEL_KEYS.has(modelKey(a))?0:1; y=MODEL_KEYS.has(modelKey(b))?0:1; }
+  if(x==null&&y==null) return 0; if(x==null) return 1; if(y==null) return -1;
+  if(typeof x==='string') return x.localeCompare(y)*state.dir; return (x-y)*state.dir; }
+
+function cards(list){
+  const priced=list.filter(a=>a.price);
+  const ps=priced.map(a=>a.price), pp=priced.map(a=>a.ppsqm);
+  const avg=arr=>arr.length?Math.round(arr.reduce((s,v)=>s+v,0)/arr.length):null;
+  const c=[['Units shown',list.length],['With price',priced.length],['Lowest price',fmt(ps.length?Math.min(...ps):null)],['Highest price',fmt(ps.length?Math.max(...ps):null)],
+    ['Avg price',fmt(avg(ps))],['Avg ₪/m²',fmt(avg(pp))],
+    ['Lowest monthly',fmt(priced.length?Math.min(...priced.map(a=>a.monthly)):null)]];
+  $('cards').innerHTML=c.map(([l,v])=>`<div class="card"><span>${l}</span><b>${v}</b></div>`).join('');
+}
+function summary(list){
+  const g={}; list.forEach(a=>{ const k=a.bld+'|'+a.type; (g[k]=g[k]||[]).push(a); });
+  const maxP=Math.max(...DATA.filter(a=>a.price).map(a=>a.price));
+  const rng=(arr,f=v=>v)=>{const mn=Math.min(...arr),mx=Math.max(...arr);return mn===mx?f(mn):f(mn)+'–'+f(mx);};
+  $('sumT').querySelector('tbody').innerHTML=Object.keys(g).sort().map(k=>{ const L=g[k], a=L[0], P=L.filter(x=>x.price);
+    const ps=P.map(x=>x.price); const mn=ps.length?Math.min(...ps):null, mx=ps.length?Math.max(...ps):null;
+    const avgpp=P.length?Math.round(P.reduce((s,x)=>s+x.ppsqm,0)/P.length):null;
+    return `<tr class="${bc(a.bld)}"><td>${badge(a.bld)}</td><td><b>${a.type}</b></td><td>${locImg(L.find(x=>x.plan&&!/-\d+\.pdf$/.test(x.plan))||L.find(x=>x.plan)||a)}</td><td class="num">${a.rooms}</td><td class="num">${L.length}</td><td class="num">${P.length}</td>
+      <td class="num">${rng(L.map(x=>x.floor))}</td><td class="num">${rng(L.map(x=>x.area),v=>v.toFixed(1))}</td><td class="num">${rng(L.map(x=>x.outdoor),v=>v.toFixed(1))}</td>
+      <td class="num">${fmt(mn)}</td><td class="num">${fmt(mx)}</td><td class="num">${fmt(avgpp)}</td>
+      <td>${L.find(x=>x.plan)?`<a href="${L.find(x=>x.plan).plan}" target="_blank">PDF</a>`:'–'}</td>
+      <td>${floorPlans(L)}</td>
+      <td>${MODEL_KEYS.has(modelKey(a))?`<a class="v3" href="model.html#${modelKey(a)}" target="_blank">View 3D</a>`:'<span class="no3" title="No plan published for this type">–</span>'}</td></tr>`; }).join('');
+}
+function render(){
+  fillTypes();
+  DATA.forEach(mortgageFor);
+  applyQ();
+  const list=filtered().sort(cmp);
+  calcNote(list);
+  renderTurn();
+  renderTaken();
+  cards(list); summary(list);
+  thead.querySelectorAll('th').forEach(th=>{ th.classList.toggle('sorted',th.dataset.k===state.sort);
+    const label=COLS.find(c=>c[0]===th.dataset.k)[1]+(th.dataset.k===state.sort?(state.dir>0?' ▲':' ▼'):'');
+    if(th.dataset.k==='apt'){
+      const n=aptSel.size;
+      th.innerHTML=`<span class="thLbl">${label}</span><button type="button" class="thFilter${n?' on':''}" id="aptFilterBtn" title="${n?n+' apartments selected. Click to change':'Filter by apartment number'}" aria-label="Filter by apartment number" aria-haspopup="dialog">${n?'⏷ '+n:'⏷'}</button>`;
+    } else if(th.dataset.k==='type'){
+      const n=typeSel.size;
+      th.innerHTML=`<span class="thLbl">${label}</span><button type="button" class="thFilter${n?' on':''}" id="typeFilterBtn" title="${n?n+' types selected. Click to change':'Filter by apartment type'}" aria-label="Filter by apartment type" aria-haspopup="dialog">${n?'⏷ '+n:'⏷'}</button>`;
+    } else th.textContent=label; });
+  $('count').textContent=`${list.length} of ${DATA.length} apartments`;
+  $('aptTitle').textContent=`Apartments (${list.length})`;
+  const keep=filtered(), keepSet=new Set(keep.map(a=>a.key));
+  const rest=DATA.filter(a=>a.target&&!keepSet.has(a.key));
+  const changes=keep.filter(a=>a.taken).length+rest.filter(a=>!a.taken).length;
+  $('bulkFree').disabled=!keep.length||!changes;
+  $('bulkFree').textContent=`✓ Only these are available (${keep.length})`;
+  $('bulkFree').title=!keep.length?'No apartments match your current filters'
+    :`Mark the ${keep.length} apartments shown in the table as available, and the other ${rest.length} target-price apartments as taken`;
+  $('mainT').querySelector('tbody').innerHTML=list.map(a=>`<tr class="${bc(a.bld)}${a.taken?' isTaken':''}">
+    <td><button class="starBtn${a.star?' on':''}" data-key="${a.key}" title="${a.star?'In your shortlist (#'+a.star+'). Click to remove':'Add to your shortlist'}">${a.star?'★':'☆'}</button></td>
+    <td><button class="takeBtn${a.taken?' on':''}" data-key="${a.key}" title="${a.taken?'Marked taken. Click if it is still available':'Click when someone ahead of you takes it'}">${a.taken?'✕ Taken':'Available'}</button></td>
+    <td>${badge(a.bld)}</td><td class="num">${a.apt}</td><td class="num">${a.floor}</td><td><b>${a.type}</b></td>
+    <td>${locImg(a)}</td><td class="num">${a.rooms}</td>
+    <td class="num">${a.area.toFixed(2)}</td><td class="num">${a.outdoor.toFixed(2)}</td><td class="num">${a.storage.toFixed(2)}</td><td class="num">${a.parking}</td>
+    <td class="${a.target?'yes':'no'}">${a.target?'Yes':'No'}</td><td class="num">${fmt(a.price)}</td>${upCell(a)}<td class="num">${fmt(a.ppsqm)}</td>
+    ${mortCells(a)}
+    <td>${a.plan?`<a href="${a.plan}" target="_blank">PDF</a>`:'–'}</td><td>${a.floorPlan?`<a href="${a.floorPlan}" target="_blank">PDF</a>`:'–'}</td>
+    <td>${MODEL_KEYS.has(modelKey(a))?`<a class="v3" href="model.html#${modelKey(a)}" target="_blank" title="3D view of type ${a.type}">View 3D</a>`:'<span class="mut" title="No plan published for this type">–</span>'}</td></tr>`).join('');
+}
+['fType','fTarget','fSpecial','fFloorMin','fFloorMax','fPriceMin','fPriceMax','fAreaMin','fAreaMax','fOutMin'].forEach(id=>$(id).addEventListener('input',render));
+$('reset').onclick=()=>{ aptSel.clear(); saveAptSel(); closeAptPop(); typeSel.clear(); saveTypeSel(); typePop.hidden=true; document.querySelectorAll('.filters input').forEach(i=>i.value=''); document.querySelectorAll('.filters select').forEach(s=>s.value=''); $('fTarget').value='1';
+  state.bld.clear(); state.rooms.clear(); document.querySelectorAll('.chip.on').forEach(c=>c.classList.remove('on')); render(); };
+try{const s=localStorage.getItem('sumOpen'); if(s!==null) $('sumD').open=s==='1';}catch(e){}
+$('sumD').addEventListener('toggle',()=>{try{localStorage.setItem('sumOpen',$('sumD').open?'1':'0');}catch(e){}});
+['aptD','shortD','takenD'].forEach(id=>{
+  try{ const s=localStorage.getItem('open_'+id); if(s!==null) $(id).open=s==='1'; }catch(e){}
+  $(id).addEventListener('toggle',()=>{ try{ localStorage.setItem('open_'+id,$(id).open?'1':'0'); }catch(e){} });
+});
+
+// ---- tabs ----
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===b));
+  ['viewTable','viewPie','viewSun'].forEach(v=>$(v).classList.toggle('hide',v!==b.dataset.v));
+  if(b.dataset.v==='viewSun' && !$('sunFrame').src) $('sunFrame').src='sun.html';
+  try{localStorage.setItem('tab',b.dataset.v);}catch(e){}
+  if(b.dataset.v==='viewPie') renderPies();
+});
+// ---- pies ----
+const pState={bld:'all'};
+[['all','All buildings'],...blds.map(b=>[b,'Bldg '+b]),['compare','Compare side by side']].forEach(([v,l])=>{
+  const b=document.createElement('button'); b.className='chip'+(v.includes('(')?' '+bc(v):'')+(v==='all'?' on':''); b.textContent=l; b.dataset.v=v;
+  b.onclick=()=>{pState.bld=v; document.querySelectorAll('#pBld .chip').forEach(c=>c.classList.toggle('on',c===b)); renderPies();};
+  $('pBld').appendChild(b);
+});
+$('pScope').addEventListener('input',renderPies);
+const M=n=>'₪'+(n/1e6).toFixed(2)+'M';
+const RC={3:'var(--r3)',4:'var(--r4)',5:'var(--r5)'};
+function arc(cx,cy,r,ri,a0,a1){
+  if(a1-a0>=Math.PI*2-1e-6) a1=a0+Math.PI*2-1e-4;
+  const p=(r,a)=>[cx+r*Math.sin(a),cy-r*Math.cos(a)], L=a1-a0>Math.PI?1:0;
+  const [x0,y0]=p(r,a0),[x1,y1]=p(r,a1),[x2,y2]=p(ri,a1),[x3,y3]=p(ri,a0);
+  return `M${x0},${y0}A${r},${r} 0 ${L} 1 ${x1},${y1}L${x2},${y2}A${ri},${ri} 0 ${L} 0 ${x3},${y3}Z`;
+}
+function pieCard(title,bld,list,big){
+  const groups=roomsL.map(r=>{const L=list.filter(a=>a.rooms===r), P=L.filter(a=>a.price);
+    return {r,n:L.length,L,P,min:P.length?Math.min(...P.map(a=>a.price)):null,max:P.length?Math.max(...P.map(a=>a.price)):null,
+      area:L.length?(L.reduce((s,a)=>s+a.area,0)/L.length):null};}).filter(g=>g.n);
+  const tot=list.length; let a=0; const cx=150,cy=150,R=120,RI=72;
+  const paths=groups.map(g=>{const a0=a,a1=a+g.n/tot*Math.PI*2; a=a1; const m=(a0+a1)/2, pct=Math.round(g.n/tot*100);
+    const lx=cx+(R+RI)/2*Math.sin(m), ly=cy-(R+RI)/2*Math.cos(m);
+    return {g,pct,d:arc(cx,cy,R,RI,a0,a1),lx,ly,show:(a1-a0)>0.35};});
+  const card=document.createElement('div'); card.className='pieCard'+(big?' big':'');
+  card.innerHTML=`<h3>${title}${bld?badge(bld):''}</h3><div class="sub">${tot} apartments</div>
+    <svg viewBox="0 0 300 300" role="img" aria-label="${title} ${bld||''} room mix">
+      ${paths.map((p,i)=>`<path d="${p.d}" fill="${RC[p.g.r]}" data-i="${i}"></path>`).join('')}
+      ${paths.filter(p=>p.show).map(p=>`<text class="lbl" x="${p.lx}" y="${p.ly+4}" text-anchor="middle" style="fill:${p.g.r===5?'#fff':'#0b0b0b'}">${p.pct}%</text>`).join('')}
+      <text class="ctr" x="150" y="152" text-anchor="middle">${tot}</text><text class="ctr2" x="150" y="172" text-anchor="middle">apartments</text>
+    </svg>
+    <div class="leg">${groups.map(g=>`<span><i style="background:${RC[g.r]}"></i>${g.r} rooms · ${g.n}</span>`).join('')}</div>
+    <table><thead><tr><th>Rooms</th><th>Units</th><th>Share</th><th>Avg area m²</th><th>Price range</th></tr></thead><tbody>
+    ${groups.map(g=>`<tr><td><i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${RC[g.r]};margin-right:6px"></i>${g.r}</td><td class="num">${g.n}</td><td class="num">${Math.round(g.n/tot*100)}%</td><td class="num">${g.area.toFixed(1)}</td><td class="num">${g.min?(g.min===g.max?M(g.min):M(g.min)+'–'+M(g.max).slice(1)):'–'}</td></tr>`).join('')}
+    </tbody></table><div class="tip"></div>`;
+  const tip=card.querySelector('.tip'), ps=card.querySelectorAll('path');
+  ps.forEach(el=>{const p=paths[+el.dataset.i];
+    el.onmousemove=e=>{ps.forEach(x=>x.classList.toggle('dim',x!==el)); const r=card.getBoundingClientRect();
+      tip.innerHTML=`<b>${p.g.r} rooms</b>: ${p.g.n} units (${p.pct}%)<br>${p.g.P.length} priced${p.g.min?` · ${fmt(p.g.min)} – ${fmt(p.g.max)}`:''}<br>Types: ${[...new Set(p.g.L.map(a=>a.type))].join(', ')}`;
+      tip.style.display='block'; tip.style.left=Math.min(e.clientX-r.left+12,r.width-tip.offsetWidth-6)+'px'; tip.style.top=(e.clientY-r.top+12)+'px';};
+    el.onmouseleave=()=>{ps.forEach(x=>x.classList.remove('dim')); tip.style.display='none';};});
+  return card;
+}
+function renderPies(){
+  const pr=$('pScope').value==='priced', base=DATA.filter(a=>!pr||a.price), g=$('pieGrid'); g.innerHTML='';
+  if(pState.bld==='compare') blds.forEach(b=>g.appendChild(pieCard('Building',b,base.filter(a=>a.bld===b))));
+  else if(pState.bld==='all') g.appendChild(pieCard('All buildings',null,base,true));
+  else g.appendChild(pieCard('Building',pState.bld,base.filter(a=>a.bld===pState.bld),true));
+}
+try{const tb=localStorage.getItem('tab'); if(tb) document.querySelector(`.tab[data-v="${tb}"]`)?.click();}catch(e){}
+render();
+</script>
+</body>
+</html>

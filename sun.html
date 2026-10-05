@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tzameret Sun Study</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--fg:#1c2230;--mut:#6b7280;--line:#e3e6eb;--acc:#2f6fdf}
+@media (prefers-color-scheme:dark){:root{--bg:#12151b;--card:#1b2029;--fg:#e6e9ef;--mut:#9aa3b2;--line:#2a313d;--acc:#6ea0ff}}
+.b1{--bc:#2f6fdf}.b2{--bc:#d9622b}.b3{--bc:#1e9e6a}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
+body{display:flex;flex-direction:column}
+.bar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:10px 14px;background:var(--card);border-bottom:1px solid var(--line)}
+.bar h1{font-size:16px;margin:0}
+.grp{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.grp label{font-size:12px;color:var(--mut)}
+input[type=date],select,button{font:inherit;padding:4px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
+button{cursor:pointer}
+button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+#time{width:min(360px,60vw)}
+.clock{font-variant-numeric:tabular-nums;font-weight:700;min-width:46px}
+.read{font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums}
+.wrap{position:relative;flex:1;min-height:420px}
+#c{position:absolute;inset:0}
+.panel{position:absolute;left:12px;bottom:12px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;max-width:min(420px,calc(100% - 24px));display:flex;flex-direction:column;gap:8px}
+.panel .row{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.panel label{font-size:12px;color:var(--mut);display:flex;gap:6px;align-items:center}
+.legend{display:none;flex-direction:column;gap:3px}
+.legend .ramp{height:10px;border-radius:3px;background:linear-gradient(90deg,#fdecd2,#f9c98a,#f29a49,#dc6a1d,#a94409)}
+.legend .ticks{display:flex;justify-content:space-between;font-size:11px;color:var(--mut);font-variant-numeric:tabular-nums}
+.prog{height:4px;background:var(--line);border-radius:2px;overflow:hidden;display:none}
+.prog i{display:block;height:100%;width:0;background:var(--acc)}
+.keys{display:flex;gap:8px;flex-wrap:wrap}
+.bt{display:inline-block;padding:1px 8px;border-radius:10px;background:var(--bc);color:#fff;font-weight:600;font-size:12px}
+.note{font-size:11px;color:var(--mut)}
+#tip{position:absolute;pointer-events:none;background:var(--fg);color:var(--bg);padding:6px 9px;border-radius:6px;font-size:12px;display:none;white-space:nowrap;z-index:5}
+#err{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:20px;text-align:center;color:var(--mut)}
+@media (max-width:640px){.read{display:none}}
+</style>
+</head>
+<body>
+<div class="bar">
+  <h1>☀️ Sun &amp; shadows</h1>
+  <div class="grp"><label for="date">Date</label><input type="date" id="date">
+    <select id="preset" aria-label="Date presets">
+      <option value="">Presets…</option><option value="06-21">Summer solstice (Jun 21)</option>
+      <option value="03-20">Equinox (Mar 20)</option><option value="12-21">Winter solstice (Dec 21)</option><option value="today">Today</option>
+    </select></div>
+  <div class="grp"><label for="time">Time</label><input type="range" id="time" min="0" max="1439" step="5"><span class="clock" id="clock"></span>
+    <button id="play" title="Play the day">▶</button></div>
+  <div class="read" id="read"></div>
+</div>
+<div class="wrap">
+  <div id="c"></div>
+  <div id="tip"></div>
+  <div id="err"></div>
+  <div class="panel">
+    <div class="row">
+      <button id="heat">Sun-hours heatmap</button>
+      <label><input type="checkbox" id="path" checked> Sun path</label>
+      <label><input type="checkbox" id="lines" checked> Floor lines</label>
+    </div>
+    <div class="prog" id="prog"><i></i></div>
+    <div class="legend" id="legend">
+      <div class="note" id="legendTitle">Hours of direct sun on each facade cell</div>
+      <div class="ramp"></div>
+      <div class="ticks"><span>0 h</span><span>3</span><span>6</span><span>9</span><span id="maxTick">12+ h</span></div>
+    </div>
+    <div class="keys" id="keys"></div>
+    <div class="note">Massing from the developer's site plan and floor plans (4.5 m ground floor, 3.2 m per floor). Hover a facade for floor, direction and sun. Drag to rotate, scroll to zoom.</div>
+  </div>
+</div>
+<script src="site.js"></script>
+<script src="vendor/three.min.js"></script>
+<script src="vendor/OrbitControls.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+if (!window.THREE) {
+  $('err').style.display = 'flex';
+  $('err').textContent = 'Could not load the bundled 3D library (vendor/three.min.js). Make sure the vendor folder is next to this page.';
+  throw new Error('three.js not loaded');
+}
+const S = window.SITE;
+const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+
+// ---------------------------------------------------------------- sun position (after SunCalc, V. Agafonkin)
+const rad = Math.PI / 180, dayMs = 864e5, J1970 = 2440588, J2000 = 2451545, OBL = rad * 23.4397;
+function sunPos(ms, lat, lng) {
+  const d = ms / dayMs - 0.5 + J1970 - J2000, lw = rad * -lng, phi = rad * lat;
+  const M = rad * (357.5291 + 0.98560028 * d);
+  const L = M + rad * (1.9148 * Math.sin(M) + 0.02 * Math.sin(2 * M) + 0.0003 * Math.sin(3 * M)) + rad * 102.9372 + Math.PI;
+  const dec = Math.asin(Math.sin(OBL) * Math.sin(L));
+  const ra = Math.atan2(Math.sin(L) * Math.cos(OBL), Math.cos(L));
+  const H = rad * (280.16 + 360.9856235 * d) - lw - ra;
+  return {
+    az: Math.atan2(Math.sin(H), Math.cos(H) * Math.sin(phi) - Math.tan(dec) * Math.cos(phi)),   // from south, + towards west
+    alt: Math.asin(Math.sin(phi) * Math.sin(dec) + Math.cos(phi) * Math.cos(dec) * Math.cos(H)),
+  };
+}
+// world: +x east, -z north, +y up
+const sunDir = p => new THREE.Vector3(-Math.sin(p.az) * Math.cos(p.alt), Math.sin(p.alt), Math.cos(p.az) * Math.cos(p.alt));
+
+// Israel local time -> UTC (handles daylight saving through Intl)
+const fmt = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Jerusalem', hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+function tzOffsetMin(utc) {
+  const p = Object.fromEntries(fmt.formatToParts(new Date(utc)).map(x => [x.type, x.value]));
+  return (Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute, +p.second) - utc) / 60000;
+}
+function localToUTC(y, m, d, minutes) {
+  const guess = Date.UTC(y, m - 1, d, 0, minutes);
+  const off = tzOffsetMin(guess - tzOffsetMin(guess) * 60000);
+  return guess - off * 60000;
+}
+const hhmm = m => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(Math.floor(m % 60)).padStart(2, '0');
+const compass = a => ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.round((((a % 360) + 360) % 360) / 45) % 8];
+
+// ---------------------------------------------------------------- scene
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputEncoding = THREE.sRGBEncoding;
+$('c').appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, 1, 1, 5000);
+camera.position.set(190, 170, 260);
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 30, 0);
+controls.enableDamping = true;
+controls.maxPolarAngle = Math.PI * 0.495;
+controls.maxDistance = 1200;
+
+const hemi = new THREE.HemisphereLight(0xdfeaff, 0x8c8a80, 0.5);
+const sun = new THREE.DirectionalLight(0xfff4e0, 1.2);
+sun.castShadow = true;
+sun.shadow.mapSize.set(4096, 4096);
+Object.assign(sun.shadow.camera, { left: -260, right: 260, top: 260, bottom: -260, near: 1, far: 1600 });
+sun.shadow.bias = -0.0003;
+sun.shadow.normalBias = 0.4;
+scene.add(hemi, sun, sun.target);
+
+const ground = new THREE.Mesh(new THREE.CircleGeometry(900, 96), new THREE.MeshStandardMaterial({ color: dark ? 0x2e3a2e : 0x9fae8f, roughness: 1 }));
+ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+
+const shapeOf = poly => {
+  let pts = poly.map(([x, z]) => new THREE.Vector2(x, -z));
+  if (THREE.ShapeUtils.isClockWise(pts)) pts = pts.reverse();     // outward-facing walls need CCW outlines
+  return new THREE.Shape(pts);
+};
+const plot = new THREE.Mesh(new THREE.ShapeGeometry(shapeOf(S.plot)), new THREE.MeshStandardMaterial({ color: dark ? 0x4a4b48 : 0xd2cdc2, roughness: 1 }));
+plot.rotation.x = -Math.PI / 2; plot.position.y = 0.05; plot.receiveShadow = true; scene.add(plot);
+
+const levelBase = i => (i === 0 ? 0 : S.groundH + (i - 1) * S.floorH);
+const levelTop = i => (i === 0 ? S.groundH : S.groundH + i * S.floorH);
+const bMeshes = [], lineGroups = [];
+for (const b of S.buildings) {
+  const geo = new THREE.ExtrudeGeometry(shapeOf(b.poly), { depth: b.height, bevelEnabled: false });
+  geo.rotateX(-Math.PI / 2);
+  const col = new THREE.Color(b.color).lerp(new THREE.Color(0xffffff), 0.72);
+  const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: col, roughness: 0.85 }));
+  mesh.castShadow = mesh.receiveShadow = true; mesh.userData.b = b;
+  scene.add(mesh); bMeshes.push(mesh);
+  const pts = [];
+  for (let i = 1; i < b.levels; i++) {
+    const y = levelBase(i);
+    b.poly.forEach((p, k) => { const q = b.poly[(k + 1) % b.poly.length]; pts.push(p[0], y, p[1], q[0], y, q[1]); });
+  }
+  const lg = new THREE.BufferGeometry(); lg.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+  const lines = new THREE.LineSegments(lg, new THREE.LineBasicMaterial({ color: new THREE.Color(b.color).multiplyScalar(0.7), transparent: true, opacity: 0.45 }));
+  scene.add(lines); lineGroups.push(lines);
+  const eg = new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), new THREE.LineBasicMaterial({ color: new THREE.Color(b.color).multiplyScalar(0.55) }));
+  scene.add(eg);
+}
+
+// labels (sprites)
+function sprite(text, color = '#1c2230', bg = 'rgba(255,255,255,.85)', size = 1) {
+  const c = document.createElement('canvas'), g = c.getContext('2d'); c.width = 256; c.height = 96;
+  g.font = 'bold 54px system-ui,Arial'; const w = g.measureText(text).width + 36;
+  g.fillStyle = bg; g.beginPath(); g.roundRect ? g.roundRect((256 - w) / 2, 12, w, 72, 18) : g.rect((256 - w) / 2, 12, w, 72); g.fill();
+  g.fillStyle = color; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, 128, 50);
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), depthTest: false }));
+  s.scale.set(24 * size, 9 * size, 1); s.renderOrder = 10; return s;
+}
+for (const b of S.buildings) {
+  const cx = b.poly.reduce((a, p) => a + p[0], 0) / b.poly.length, cz = b.poly.reduce((a, p) => a + p[1], 0) / b.poly.length;
+  const s = sprite(b.id, '#fff', b.color); s.position.set(cx, b.height + 8, cz); scene.add(s);
+}
+// compass on the ground
+const R = 150;
+const ring = new THREE.Mesh(new THREE.RingGeometry(R - 0.6, R + 0.6, 128), new THREE.MeshBasicMaterial({ color: dark ? 0x8892a0 : 0x6b7280, transparent: true, opacity: 0.5 }));
+ring.rotation.x = -Math.PI / 2; ring.position.y = 0.1; scene.add(ring);
+[['N', 0, -1], ['E', 1, 0], ['S', 0, 1], ['W', -1, 0]].forEach(([t, x, z]) => {
+  const s = sprite(t, t === 'N' ? '#c0392b' : '#1c2230'); s.position.set(x * (R + 14), 4, z * (R + 14)); scene.add(s);
+});
+
+// sun disc + path
+const PATH_R = 330;
+const sunBall = new THREE.Mesh(new THREE.SphereGeometry(9, 24, 16), new THREE.MeshBasicMaterial({ color: 0xffc83d }));
+scene.add(sunBall);
+const pathGroup = new THREE.Group(); scene.add(pathGroup);
+
+// ---------------------------------------------------------------- facade cells (for the heatmap and hover)
+const inside = (poly, x, z) => {
+  let ins = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, zi] = poly[i], [xj, zj] = poly[j];
+    if ((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) ins = !ins;
+  }
+  return ins;
+};
+const cells = [];
+S.buildings.forEach((b, bi) => {
+  b.poly.forEach((a, k) => {
+    const q = b.poly[(k + 1) % b.poly.length];
+    const dx = q[0] - a[0], dz = q[1] - a[1], L = Math.hypot(dx, dz);
+    if (L < 0.8) return;
+    let nx = dz / L, nz = -dx / L;
+    if (inside(b.poly, (a[0] + q[0]) / 2 + nx * 0.5, (a[1] + q[1]) / 2 + nz * 0.5)) { nx = -nx; nz = -nz; }
+    const nseg = Math.max(1, Math.round(L / 3));
+    for (let j = 0; j < nseg; j++) {
+      const t = (j + 0.5) / nseg, cx = a[0] + dx * t, cz = a[1] + dz * t;
+      for (let i = 0; i < b.levels; i++) {
+        const y0 = levelBase(i), y1 = levelTop(i);
+        cells.push({ bi, level: i, x: cx, y: (y0 + y1) / 2, z: cz, w: L / nseg, h: y1 - y0, nx, nz, hours: 0 });
+      }
+    }
+  });
+});
+const heatGeo = new THREE.PlaneGeometry(1, 1);
+const heatMesh = new THREE.InstancedMesh(heatGeo, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, toneMapped: false }), cells.length);
+{
+  const m = new THREE.Matrix4(), qn = new THREE.Quaternion(), up = new THREE.Vector3(0, 0, 1);
+  cells.forEach((c, i) => {
+    qn.setFromUnitVectors(up, new THREE.Vector3(c.nx, 0, c.nz));
+    m.compose(new THREE.Vector3(c.x + c.nx * 0.08, c.y, c.z + c.nz * 0.08), qn, new THREE.Vector3(c.w * 0.94, c.h * 0.9, 1));
+    heatMesh.setMatrixAt(i, m); heatMesh.setColorAt(i, new THREE.Color(0xffffff));
+  });
+}
+heatMesh.visible = false; scene.add(heatMesh);
+const RAMP = ['#fdecd2', '#f9c98a', '#f29a49', '#dc6a1d', '#a94409'].map(h => new THREE.Color(h));
+function rampColor(t) {
+  t = Math.min(1, Math.max(0, t)) * (RAMP.length - 1);
+  const i = Math.min(RAMP.length - 2, Math.floor(t));
+  return RAMP[i].clone().lerp(RAMP[i + 1], t - i);
+}
+
+// ---------------------------------------------------------------- state & updates
+const ray = new THREE.Raycaster();
+const today = new Date();
+let Y, Mo, D, minutes = 12 * 60, playing = false, heatOn = false, heatDate = '';
+function setDate(str) {
+  [Y, Mo, D] = str.split('-').map(Number); $('date').value = str;
+  drawPath(); updateSun();
+  if (heatOn) computeHeat();
+}
+function dayInfo() {
+  let rise = null, set = null, noon = null, best = -9;
+  for (let m = 0; m < 1440; m += 2) {
+    const p = sunPos(localToUTC(Y, Mo, D, m), S.lat, S.lon);
+    const up = p.alt > -0.833 * rad;
+    if (up && rise === null) rise = m;
+    if (up) set = m;
+    if (p.alt > best) { best = p.alt; noon = m; }
+  }
+  return { rise, set, noon, maxAlt: best / rad };
+}
+function drawPath() {
+  pathGroup.clear();
+  const pts = [];
+  for (let m = 0; m <= 1440; m += 10) {
+    const p = sunPos(localToUTC(Y, Mo, D, m), S.lat, S.lon);
+    if (p.alt > -0.02) pts.push(sunDir(p).multiplyScalar(PATH_R));
+  }
+  if (pts.length > 1) {
+    pathGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0xf2a541 })));
+  }
+  for (let h = 0; h < 24; h++) {
+    const p = sunPos(localToUTC(Y, Mo, D, h * 60), S.lat, S.lon);
+    if (p.alt < 0.03) continue;
+    const s = sprite(String(h), '#7a4a00', 'rgba(255,236,190,.9)', 0.7);
+    s.position.copy(sunDir(p).multiplyScalar(PATH_R + 14)); pathGroup.add(s);
+  }
+  pathGroup.visible = $('path').checked;
+  const di = dayInfo();
+  $('read').dataset.day = di.rise === null ? 'Sun does not rise' :
+    `Sunrise ${hhmm(di.rise)} · sunset ${hhmm(di.set)} · ${((di.set - di.rise) / 60).toFixed(1)} h of daylight · highest ${di.maxAlt.toFixed(0)}° at ${hhmm(di.noon)}`;
+}
+const skyDay = new THREE.Color(dark ? 0x2a3b55 : 0xbfd9f2), skyLow = new THREE.Color(dark ? 0x3a2e2a : 0xf3d2b0), skyNight = new THREE.Color(dark ? 0x0b0e14 : 0x1f2738);
+let curDir = new THREE.Vector3(0, 1, 0), curAlt = 1;
+function updateSun() {
+  const p = sunPos(localToUTC(Y, Mo, D, minutes), S.lat, S.lon);
+  curAlt = p.alt; curDir = sunDir(p);
+  const altD = p.alt / rad, azN = (p.az / rad + 180 + 360) % 360;
+  sunBall.position.copy(curDir.clone().multiplyScalar(PATH_R));
+  sunBall.visible = altD > -1;
+  sun.position.copy(curDir.clone().multiplyScalar(700)); sun.target.position.set(0, 0, 0);
+  const k = Math.max(0, Math.min(1, altD / 25));
+  sun.intensity = altD > 0 ? 0.2 + 0.65 * k : 0;
+  sun.color.set(altD < 10 ? 0xffc89a : 0xfff4e0);
+  hemi.intensity = altD > 0 ? 0.28 + 0.17 * k : 0.12;
+  scene.background = (altD <= 0 ? skyNight.clone().lerp(skyLow, Math.max(0, (altD + 6) / 6)) : skyLow.clone().lerp(skyDay, k));
+  $('clock').textContent = hhmm(minutes);
+  $('time').value = minutes;
+  $('read').textContent = (altD > 0 ? `Sun ${altD.toFixed(0)}° high, from the ${compass(azN)} (${azN.toFixed(0)}°)` : 'Sun below the horizon') + ' · ' + ($('read').dataset.day || '');
+}
+
+// sun-hours heatmap
+function computeHeat() {
+  const key = `${Y}-${Mo}-${D}`;
+  $('legend').style.display = 'flex'; heatMesh.visible = true;
+  lineGroups.forEach(l => l.visible = false);
+  if (heatDate === key) return;
+  heatDate = key;
+  const steps = [];
+  for (let m = 0; m < 1440; m += 15) {
+    const p = sunPos(localToUTC(Y, Mo, D, m + 7.5), S.lat, S.lon);
+    if (p.alt > 2 * rad) steps.push(sunDir(p));
+  }
+  cells.forEach(c => c.hours = 0);
+  $('prog').style.display = 'block';
+  const o = new THREE.Vector3(), bar = $('prog').firstElementChild;
+  let i = 0;
+  const chunk = () => {
+    const end = Math.min(cells.length, i + 120);
+    for (; i < end; i++) {
+      const c = cells[i];
+      for (const d of steps) {
+        if (c.nx * d.x + c.nz * d.z <= 0.02) continue;          // facade turned away from the sun
+        o.set(c.x + c.nx * 0.2, c.y, c.z + c.nz * 0.2);
+        ray.set(o, d); ray.far = 2000;
+        if (!ray.intersectObjects(bMeshes, false).length) c.hours += 0.25;
+      }
+    }
+    bar.style.width = (100 * i / cells.length).toFixed(0) + '%';
+    if (i < cells.length && heatDate === key) return setTimeout(chunk, 0);
+    $('prog').style.display = 'none';
+    const max = Math.max(6, Math.ceil(Math.max(...cells.map(c => c.hours))));
+    $('maxTick').textContent = max + ' h';
+    $('legend').querySelectorAll('.ticks span').forEach((s, k) => { if (k > 0 && k < 4) s.textContent = Math.round(max * k / 4); });
+    $('legendTitle').textContent = `Hours of direct sun on each facade cell · ${$('date').value}`;
+    cells.forEach((c, k) => heatMesh.setColorAt(k, rampColor(c.hours / max)));
+    heatMesh.instanceColor.needsUpdate = true;
+  };
+  chunk();
+}
+$('heat').onclick = () => {
+  heatOn = !heatOn; $('heat').classList.toggle('on', heatOn);
+  if (heatOn) computeHeat();
+  else { heatMesh.visible = false; $('legend').style.display = 'none'; lineGroups.forEach(l => l.visible = $('lines').checked); }
+};
+$('lines').onchange = () => { if (!heatOn) lineGroups.forEach(l => l.visible = $('lines').checked); };
+$('path').onchange = () => { pathGroup.visible = $('path').checked; };
+$('time').oninput = e => { minutes = +e.target.value; updateSun(); };
+$('date').onchange = e => e.target.value && setDate(e.target.value);
+$('preset').onchange = e => {
+  const v = e.target.value; e.target.value = '';
+  if (!v) return;
+  const y = $('date').value.slice(0, 4) || today.getFullYear();
+  setDate(v === 'today' ? today.toISOString().slice(0, 10) : `${y}-${v}`);
+};
+let lastT = 0;
+$('play').onclick = () => {
+  playing = !playing; $('play').textContent = playing ? '❚❚' : '▶'; $('play').classList.toggle('on', playing);
+  if (playing) { const di = dayInfo(); if (di.rise !== null && (minutes >= di.set || minutes < di.rise)) minutes = di.rise; }
+};
+
+// hover: building, floor, direction, sun now / sun hours
+const mouse = new THREE.Vector2(), tip = $('tip');
+renderer.domElement.addEventListener('pointermove', e => {
+  const r = renderer.domElement.getBoundingClientRect();
+  mouse.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(mouse, camera); ray.far = Infinity;
+  const hit = ray.intersectObjects(heatOn ? [heatMesh] : bMeshes, false)[0];
+  if (!hit) { tip.style.display = 'none'; return; }
+  let b, level, facing, hours = null, pt = hit.point;
+  if (heatOn) {
+    const c = cells[hit.instanceId]; b = S.buildings[c.bi]; level = c.level; hours = c.hours;
+    facing = compass(Math.atan2(c.nx, -c.nz) / rad);
+  } else {
+    b = hit.object.userData.b;
+    level = pt.y < S.groundH ? 0 : Math.min(b.levels - 1, 1 + Math.floor((pt.y - S.groundH) / S.floorH));
+    const n = hit.face.normal.clone().transformDirection(hit.object.matrixWorld);
+    facing = Math.abs(n.y) > 0.7 ? 'roof' : compass(Math.atan2(n.x, -n.z) / rad);
+  }
+  let lit = false;
+  if (curAlt > 0) {
+    const n = hit.face ? hit.face.normal.clone().transformDirection(hit.object.matrixWorld) : new THREE.Vector3(0, 1, 0);
+    const o = pt.clone().add(n.multiplyScalar(0.25));
+    const r2 = new THREE.Raycaster(o, curDir.clone(), 0, 3000);
+    lit = !r2.intersectObjects(bMeshes, false).length && (heatOn ? (cells[hit.instanceId].nx * curDir.x + cells[hit.instanceId].nz * curDir.z) > 0 : true);
+  }
+  tip.innerHTML = `<b>Building ${b.name}</b> · floor ${level}${facing === 'roof' ? ' · roof' : ' · facing ' + facing}<br>` +
+    (hours !== null ? `${hours.toFixed(1)} h direct sun on ${$('date').value}<br>` : '') +
+    (curAlt > 0 ? (lit ? '☀️ in sun at ' : '🌥 in shade at ') + hhmm(minutes) : '🌙 night at ' + hhmm(minutes));
+  tip.style.display = 'block';
+  tip.style.left = Math.min(e.clientX - r.left + 14, r.width - tip.offsetWidth - 8) + 'px';
+  tip.style.top = (e.clientY - r.top + 14) + 'px';
+});
+renderer.domElement.addEventListener('pointerleave', () => tip.style.display = 'none');
+
+$('keys').innerHTML = S.buildings.map((b, i) => `<span class="bt b${i + 1}">${b.name} · ${b.levels} floors · ${b.height.toFixed(0)} m</span>`).join('');
+
+function resize() {
+  const el = $('c'), w = el.clientWidth, h = el.clientHeight;
+  renderer.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix();
+  if (!resize.done) {                       // fit the whole site on first layout, also on narrow screens
+    const k = 0.8 / Math.min(1, camera.aspect * 1.25);
+    camera.position.set(190 * k, 170 * k, 260 * k); resize.done = true;
+  }
+}
+addEventListener('resize', resize);
+resize();
+setDate(today.toISOString().slice(0, 10));
+{
+  const now = new Date(), p = Object.fromEntries(fmt.formatToParts(now).map(x => [x.type, x.value]));
+  minutes = Math.round((+p.hour * 60 + +p.minute) / 5) * 5;
+  const di = dayInfo(); if (di.rise !== null && (minutes < di.rise || minutes > di.set)) minutes = di.noon;
+  updateSun();
+}
+renderer.setAnimationLoop(t => {
+  if (playing) {
+    const dt = lastT ? (t - lastT) / 1000 : 0;
+    minutes += dt * 60;                    // one hour per second
+    const di = dayInfo();
+    if (di.set !== null && minutes > di.set) { minutes = di.set; playing = false; $('play').textContent = '▶'; $('play').classList.remove('on'); }
+    updateSun();
+  }
+  lastT = t;
+  controls.update(); renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>
