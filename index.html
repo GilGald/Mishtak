@@ -220,6 +220,11 @@ td.note{max-width:220px;white-space:normal;font-size:12px}
 .pickTag{display:inline-block;min-width:22px;padding:1px 7px;border-radius:10px;background:#1c2230;color:#fff;font-weight:700;font-size:12px;text-align:center}
 .prefOnly{display:inline-flex;align-items:center;gap:5px;font-size:12px;margin-left:auto;margin-right:8px;cursor:pointer;white-space:nowrap}
 @media (prefers-color-scheme:dark){.pickTag{background:#e6e9ef;color:#12151b}}
+button.pickTag{border:0;cursor:pointer;font:inherit;font-weight:700;font-size:12px}
+button.pickTag:hover{outline:2px solid #c58b2b}
+.prefBar .pf{cursor:grab;touch-action:none;user-select:none}.prefBar .pf:hover{border-color:#c58b2b}
+.prefBar .pf.pfDrag{cursor:grabbing;box-shadow:0 8px 20px rgba(0,0,0,.25)}
+.prefBar .pfPh{border:2px dashed #c58b2b;background:#c58b2b14;padding:0}
 </style>
 </head>
 <body>
@@ -566,6 +571,17 @@ const statusOf = a => !a.target ? 'nfs' : a.sold ? 'sold' : 'free';
 let PREF = [];
 try{ PREF = JSON.parse(localStorage.getItem('aptPref')||'[]').filter(k=>byKey[k]); }catch(e){}
 const savePref = () => { try{ localStorage.setItem('aptPref',JSON.stringify(PREF)); }catch(e){} };
+// move an apartment to a new preference number; the others shift to make room
+function movePref(key){
+  const from=PREF.indexOf(key)+1; if(!from) return;
+  const a=byKey[key];
+  const v=prompt(`Apartment ${a.apt} (${a.bld}) is your pick #${from}.\nNew number (1–${PREF.length}):`, from);
+  if(v===null) return;
+  const to=Math.round(+v);
+  if(!Number.isFinite(to)||to<1){ alert('Please enter a number from 1 to '+PREF.length); return; }
+  PREF.splice(from-1,1); PREF.splice(Math.min(to,PREF.length+1)-1,0,key);
+  savePref(); render();
+}
 // ---- column picker: hide/show columns of the apartments table (saved per browser) ----
 let HIDDEN_COLS = new Set();
 try{ HIDDEN_COLS = new Set(JSON.parse(localStorage.getItem('hiddenCols')||'["note"]')); }catch(e){}
@@ -603,8 +619,8 @@ function renderBld(){
   }).join('');
   $('prefBar').innerHTML = PREF.length
     ? `<b>My preferred apartments</b> ${PREF.map((k,i)=>{ const a=byKey[k], gone=statusOf(a)!=='free';
-        return `<span class="pf${gone?' gone':''}" title="${gone?'No longer available':''}"><i>${i+1}</i>${a.bld.split(' ')[1]} apt ${a.apt} · fl ${a.floor} · ${a.type}${gone?' · sold':''}</span>`; }).join('')} <button type="button" id="prefClear" class="danger">Clear</button>`
-    : '<span class="mut">No preferences yet: click available (green) apartments in the order you like them.</span>';
+        return `<span class="pf${gone?' gone':''}" data-pick="${k}" title="${gone?'No longer available. ':''}Drag to reorder, or click to type a new number"><i>${i+1}</i>${a.bld.split(' ')[1]} apt ${a.apt} · fl ${a.floor} · ${a.type}${gone?' · sold':''}</span>`; }).join('')} <button type="button" id="prefClear" class="danger">Clear</button>`
+    : '<span class="mut">No preferences yet: click available (green) apartments in the order you like them. Later, drag a number to reorder, or click it to type a new number.</span>';
 }
 $('bldGrid').addEventListener('click',e=>{
   const c=e.target.closest('.cell'); if(!c) return;
@@ -614,6 +630,41 @@ $('bldGrid').addEventListener('click',e=>{
   else return;
   savePref(); render();
 });
+// drag the pick chips to reorder; a click without moving opens "type a new number"
+(function(){
+  const bar=$('prefBar'); let d=null;
+  bar.addEventListener('pointerdown',e=>{
+    const chip=e.target.closest('.pf'); if(!chip||e.button>0) return;
+    d={chip, key:chip.dataset.pick, x0:e.clientX, y0:e.clientY, moving:false, id:e.pointerId};
+  });
+  bar.addEventListener('pointermove',e=>{
+    if(!d) return;
+    if(!d.moving){
+      if(Math.hypot(e.clientX-d.x0,e.clientY-d.y0)<6) return;
+      d.moving=true; bar.setPointerCapture(d.id);
+      const r=d.chip.getBoundingClientRect();
+      d.dx=e.clientX-r.left; d.dy=e.clientY-r.top;
+      d.ph=document.createElement('span'); d.ph.className='pf pfPh'; d.ph.style.width=r.width+'px'; d.ph.style.height=r.height+'px';
+      d.chip.after(d.ph);
+      Object.assign(d.chip.style,{position:'fixed',left:r.left+'px',top:r.top+'px',zIndex:70,pointerEvents:'none'});
+      d.chip.classList.add('pfDrag');
+    }
+    d.chip.style.left=(e.clientX-d.dx)+'px'; d.chip.style.top=(e.clientY-d.dy)+'px';
+    const chips=[...bar.querySelectorAll('.pf:not(.pfDrag):not(.pfPh)')];
+    let best=null, bd=1e9;
+    chips.forEach(c=>{ const r=c.getBoundingClientRect(); const dist=Math.hypot(e.clientX-(r.left+r.width/2),e.clientY-(r.top+r.height/2)); if(dist<bd){bd=dist;best=c;} });
+    if(best){ const r=best.getBoundingClientRect(); e.clientX<r.left+r.width/2 ? best.before(d.ph) : best.after(d.ph); }
+  });
+  const end=e=>{
+    if(!d) return;
+    const cur=d; d=null;
+    if(!cur.moving){ movePref(cur.key); return; }
+    const order=[...bar.querySelectorAll('.pf')].filter(c=>c!==cur.chip).map(c=>c===cur.ph?cur.key:c.dataset.pick).filter(Boolean);
+    if(order.length===PREF.length){ PREF=order; savePref(); }
+    render();
+  };
+  bar.addEventListener('pointerup',end); bar.addEventListener('pointercancel',()=>{ if(d){ d=null; render(); } });
+})();
 $('prefBar').addEventListener('click',e=>{ if(e.target.id==='prefClear' && confirm('Clear all '+PREF.length+' preferred apartments?')){ PREF=[]; savePref(); renderBld(); } });
 function renderTaken(){
   const rows=Object.entries(Q.taken).filter(([k])=>byKey[k]).sort((a,b)=>(b[1]||0)-(a[1]||0)).map(([k,ts])=>[byKey[k],ts]);
@@ -634,6 +685,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape') $('lb').hidden=tru
 function toggleStar(k){ const tk=byKey[k]?typeKey(byKey[k]):k; const i=Q.short.indexOf(tk); if(i>=0) Q.short.splice(i,1); else Q.short.push(tk); saveQ(); render(); }
 function toggleTaken(k){ if(Q.taken[k]) delete Q.taken[k]; else Q.taken[k]=Date.now(); saveQ(); render(); }
 function openLoc(e){
+  const pk=e.target.closest('[data-pick]'); if(pk){ movePref(pk.dataset.pick); return; }
   const lb=e.target.closest('.locBtn');
   if(lb){ const a=byKey[lb.dataset.key]; $('lbImg').src=keyplanOf(a); $('lbImg').alt='Location of apartment '+a.apt;
     $('lbTitle').innerHTML=`${badge(a.bld)} Apt ${a.apt} · floor ${a.floor} · type ${a.type} · ${a.rooms} rooms`; $('lbPdf').href=a.plan; $('lb').hidden=false; $('lbX').focus(); return; }
@@ -796,7 +848,7 @@ function render(){
     :`Mark the ${keep.length} apartments shown in the table as available, and the other ${rest.length} target-price apartments as taken`;
   $('mainT').querySelector('tbody').innerHTML=list.map(a=>`<tr class="${bc(a.bld)}${a.taken?' isTaken':''}">
     <td>${a.star?`<span class="rankTag" title="Type ${a.type} is #${a.star} in your ranking (set it in the Apartment types summary)">★ #${a.star}</span>`:'<span class="mut" title="Type not ranked. Rank types with ☆ in the Apartment types summary">–</span>'}</td>
-    <td>${(()=>{ const pn=PREF.indexOf(a.key)+1; return pn?`<span class="pickTag" title="Your preference #${pn} (set in the Buildings tab)">${pn}</span>`:'<span class="mut" title="Not numbered in the Buildings tab">–</span>'; })()}</td>
+    <td>${(()=>{ const pn=PREF.indexOf(a.key)+1; return pn?`<button type="button" class="pickTag" data-pick="${a.key}" title="Your preference #${pn}. Click to change the number">${pn}</button>`:'<span class="mut" title="Not numbered in the Buildings tab">–</span>'; })()}</td>
     <td><button class="takeBtn${a.taken?' on':''}" data-key="${a.key}" title="${a.taken?'Marked taken. Click if it is still available':'Click when someone ahead of you takes it'}">${a.taken?'✕ Taken':'Available'}</button></td>
     <td>${a.sold?`<span class="soldTag" title="Marked sold on the developer's price list (${SOLD_AS_OF})">Sold</span>`:`<span class="mut" title="Not sold on the developer's price list (${SOLD_AS_OF})">No</span>`}</td>
     <td>${badge(a.bld)}</td><td class="num">${a.apt}</td><td class="num">${a.floor}</td><td><b>${a.type}</b></td>
